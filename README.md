@@ -152,6 +152,31 @@ make docker-dev
 
 For easier development and deployment, a [Makefile](Makefile) is provided with common commands.
 
+### Universal Deployment System
+
+This project includes a universal deployment system that can automatically deploy any Next.js application to a VPS:
+
+- Located in [universal-deploy/](universal-deploy/) directory
+- Supports customizable configurations
+- Automatically generates PM2, Nginx, and deployment scripts
+- Includes CLI tool for easy usage
+- Cross-platform support (Linux/MacOS/Windows)
+
+To use the universal deployment system:
+
+```bash
+# Initialize a new configuration
+npm run universal:init myapp
+
+# Generate deployment files
+npm run universal:generate myapp.config.json
+
+# Deploy the application
+npm run universal:deploy myapp.config.json
+```
+
+See [universal-deploy/README.md](universal-deploy/README.md) for detailed usage instructions.
+
 ## License
 
 This project is licensed under the MIT License.
