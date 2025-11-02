@@ -1,0 +1,151 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
+
+jobs:
+  deploy-vps:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    
+    environment: production
+    concurrency: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build application
+      run: npm run build
+      
+    - name: Deploy to VPS via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        port: ${{ secrets.VPS_PORT || '22' }}
+        script: |
+          # Set maintenance mode
+          touch /var/www/bizmanager/.maintenance
+          
+          # Create backup directory with timestamp
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          mkdir -p /var/www/bizmanager_backups/$TIMESTAMP
+          
+          # Backup current deployment
+          cp -r /var/www/bizmanager/* /var/www/bizmanager_backups/$TIMESTAMP/ 2>/dev/null || true
+          
+          # Clean deployment directory
+          rm -rf /var/www/bizmanager/*
+          
+          # Copy new build files
+          cp -r .next /var/www/bizmanager/
+          cp -r public /var/www/bizmanager/
+          cp package.json /var/www/bizmanager/
+          cp ecosystem.config.js /var/www/bizmanager/
+          cp next.config.ts /var/www/bizmanager/
+          
+          # Change to deployment directory
+          cd /var/www/bizmanager
+          
+          # Install production dependencies
+          npm ci --only=production
+          
+          # Run database migrations
+          npx prisma migrate deploy
+          
+          # Restart application with PM2
+          pm2 restart bizmanager
+          
+          # Remove maintenance mode
+          rm -f /var/www/bizmanager/.maintenance
+          
+          # Cleanup old backups (keep last 5)
+          ls -td /var/www/bizmanager_backups/*/ | tail -n +6 | xargs rm -rf
+
+  deploy-docker:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: deploy-vps
+    if: success()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        
+    - name: Extract Docker metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ secrets.DOCKER_USERNAME }}/bizmanager
+        tags: |
+          type=raw,value=latest
+          type=sha,prefix={{branch}}-
+          type=raw,value={{date 'YYYY-MM-DD'}}
+        
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    needs: [deploy-vps, deploy-docker]
+    if: success()
+    
+    steps:
+    - name: Wait for deployment
+      run: sleep 30
+      
+    - name: Check application health
+      run: |
+        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.APP_URL }}/api/health || echo "000")
+        if [ "$RESPONSE" != "200" ]; then
+          echo "Health check failed with status $RESPONSE"
+          exit 1
+        else
+          echo "Health check passed"
+        fi
+          
+    - name: Notify on success
+      if: success()
+      run: echo "Deployment successful!"
+      
+    - name: Rollback on failure
+      if: failure()
+      run: |
+        echo "Deployment failed. Initiating rollback..."
+        # In a real scenario, you would implement rollback logic here
