@@ -13,7 +13,7 @@ jobs:
     
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x]
     
     steps:
     - name: Checkout code
@@ -64,7 +64,7 @@ jobs:
     - name: Download build artifacts
       uses: actions/download-artifact@v4
       with:
-        name: build-artifacts-node-18.x
+        name: build-artifacts-node-20.x
     
     - name: Deploy to VPS
       uses: appleboy/ssh-action@v1.0.3
