@@ -27,8 +27,8 @@ sudo apt-get install -y nodejs
 # Install PM2 (process manager for Node.js applications)
 sudo npm install -g pm2
 
-# Install SQLite (if using SQLite as database)
-sudo apt install -y sqlite3
+# Install PostgreSQL
+sudo apt install -y postgresql postgresql-contrib
 
 # Install Nginx (web server)
 sudo apt install -y nginx
@@ -37,14 +37,27 @@ sudo apt install -y nginx
 sudo apt install -y git
 ```
 
-### 3. Install and Configure Database (SQLite)
+### 3. Install and Configure Database (PostgreSQL)
 
-For this application, we'll use SQLite for simplicity. In production, you might want to use PostgreSQL.
+For this application, we'll use PostgreSQL for production.
 
 ```bash
-# Create directory for the database
-sudo mkdir -p /var/lib/bizmanager
-sudo chown $USER:$USER /var/lib/bizmanager
+# Start and enable PostgreSQL
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+
+# Switch to postgres user and create database and user
+sudo -u postgres psql -c "CREATE DATABASE bizmanager;"
+sudo -u postgres psql -c "CREATE USER bizmanager WITH ENCRYPTED PASSWORD 'secretpassword';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE bizmanager TO bizmanager;"
+sudo -u postgres psql -c "ALTER USER bizmanager WITH SUPERUSER;"
+
+# Configure PostgreSQL to allow connections
+echo "host    bizmanager    bizmanager    0.0.0.0/0    md5" | sudo tee -a /etc/postgresql/*/main/pg_hba.conf
+echo "listen_addresses = '*'" | sudo tee -a /etc/postgresql/*/main/postgresql.conf
+
+# Restart PostgreSQL
+sudo systemctl restart postgresql
 ```
 
 ## GitHub Actions Deployment (Recommended)
@@ -102,7 +115,30 @@ Option 2: Upload files manually using SCP or SFTP
 scp -r /path/to/local/bizmanager user@your-vps-ip:/var/www/
 ```
 
-### 2. Install Dependencies
+### 2. Install Dependencies and Run Database Migrations
+
+The application provides convenient scripts for installing dependencies and running database migrations:
+
+**On Unix/Linux systems:**
+```bash
+# Install dependencies and run migrations
+./migrate-db.sh
+```
+
+**On Windows systems:**
+```cmd
+# Install dependencies and run migrations
+migrate-db.bat
+```
+
+These scripts will:
+- Check if dependencies are installed and install them if missing
+- Verify PostgreSQL connectivity
+- Create default configuration files if needed (with PostgreSQL settings)
+- Generate Prisma client
+- Run database migrations
+
+Alternatively, you can manually install dependencies and run migrations:
 
 ```bash
 cd /var/www/bizmanager
@@ -121,7 +157,7 @@ Add the following content (adjust values as needed):
 
 ```
 # Database configuration
-DATABASE_URL="file:/var/lib/bizmanager/bizmanager.db"
+DATABASE_URL="postgresql://bizmanager:secretpassword@localhost:5432/bizmanager"
 
 # Authentication secret
 AUTH_SECRET="your-super-secret-auth-key-change-this-in-production"
@@ -136,14 +172,23 @@ Generate a strong AUTH_SECRET:
 openssl rand -base64 32
 ```
 
-### 4. Run Database Migrations
+**Important:** The application only supports PostgreSQL. SQLite is not supported for production deployments.
+
+### 4. Generate Prisma Client
+
+```bash
+cd /var/www/bizmanager
+npx prisma generate
+```
+
+### 5. Run Database Migrations
 
 ```bash
 cd /var/www/bizmanager
 npx prisma migrate deploy
 ```
 
-### 5. Seed the Database (Optional)
+### 6. Seed the Database (Optional)
 
 If you want to populate the database with initial data:
 
@@ -152,7 +197,7 @@ cd /var/www/bizmanager
 npm run seed
 ```
 
-### 6. Build the Application
+### 7. Build the Application
 
 ```bash
 cd /var/www/bizmanager
@@ -180,7 +225,8 @@ module.exports = {
     cwd: '/var/www/bizmanager',
     env: {
       NODE_ENV: 'production',
-      PORT: 3000
+      PORT: 3000,
+      DATABASE_URL: 'postgresql://bizmanager:secretpassword@localhost:5432/bizmanager'
     }
   }]
 }
@@ -277,6 +323,9 @@ sudo ufw allow 80
 
 # Allow HTTPS (port 443)
 sudo ufw allow 443
+
+# Allow PostgreSQL (port 5432) - only if accessing from external sources
+# sudo ufw allow 5432
 ```
 
 ## Monitoring and Maintenance
@@ -292,6 +341,9 @@ sudo tail -f /var/log/nginx/access.log
 
 # View Nginx error logs
 sudo tail -f /var/log/nginx/error.log
+
+# View PostgreSQL logs
+sudo tail -f /var/log/postgresql/postgresql-*.log
 ```
 
 ### Restart Application
@@ -316,8 +368,14 @@ git pull
 # Install/update dependencies
 npm install
 
+# Generate Prisma client
+npx prisma generate
+
 # Build the application
 npm run build
+
+# Run database migrations
+npx prisma migrate deploy
 
 # Restart the application
 pm2 reload bizmanager
@@ -343,8 +401,14 @@ pm2 reload bizmanager
 
 4. Verify database connectivity:
    ```bash
-   # Check if database file exists
-   ls -la /var/lib/bizmanager/
+   # Test database connection
+   sudo -u postgres psql -d bizmanager -c "SELECT version();"
+   ```
+
+5. Check if database migrations are up to date:
+   ```bash
+   cd /var/www/bizmanager
+   npx prisma migrate status
    ```
 
 ## Security Considerations
@@ -355,3 +419,5 @@ pm2 reload bizmanager
 4. Implement proper backup strategies
 5. Monitor logs for suspicious activity
 6. Restrict unnecessary ports with firewall
+7. Use a dedicated database user with minimal privileges
+8. Regularly backup your database

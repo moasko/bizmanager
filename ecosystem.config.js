@@ -6,11 +6,13 @@ module.exports = {
     cwd: './',
     env: {
       NODE_ENV: 'production',
-      PORT: process.env.PORT || 3000
+      PORT: process.env.PORT || 3000,
+      DATABASE_URL: process.env.DATABASE_URL || 'postgresql://bizmanager:secretpassword@localhost:5432/bizmanager'
     },
     env_production: {
       NODE_ENV: 'production',
-      PORT: process.env.PORT || 3000
+      PORT: process.env.PORT || 3000,
+      DATABASE_URL: process.env.DATABASE_URL || 'postgresql://bizmanager:secretpassword@localhost:5432/bizmanager'
     },
     instances: 1,
     autorestart: true,

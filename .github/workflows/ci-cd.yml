@@ -48,7 +48,7 @@ jobs:
           .next/
           public/
           package.json
-          .next/
+          prisma/
         if-no-files-found: warn
 
   # CD Pipeline - Deploy to VPS
@@ -82,6 +82,9 @@ jobs:
           
           # Install dependencies
           npm ci --only=production
+          
+          # Generate Prisma client
+          npx prisma generate
           
           # Run database migrations
           npx prisma migrate deploy

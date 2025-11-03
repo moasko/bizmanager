@@ -61,12 +61,16 @@ jobs:
           cp package.json /var/www/bizmanager/
           cp ecosystem.config.js /var/www/bizmanager/
           cp next.config.ts /var/www/bizmanager/
+          cp -r prisma /var/www/bizmanager/
           
           # Change to deployment directory
           cd /var/www/bizmanager
           
           # Install production dependencies
           npm ci --only=production
+          
+          # Generate Prisma client
+          npx prisma generate
           
           # Run database migrations
           npx prisma migrate deploy
