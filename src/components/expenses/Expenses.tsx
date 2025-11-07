@@ -26,7 +26,7 @@ export const Expenses: React.FC<ExpensesProps> = ({ business, onAddExpense }) =>
     const createExpenseMutation = useCreateExpense();
 
     // Convert database expense objects to Expense type
-    const formattedExpenses = expenses.map(expense => ({
+    const formattedExpenses = expenses.map((expense: any) => ({
         ...expense,
         date: typeof expense.date === 'string' ? expense.date : expense.date.toISOString().split('T')[0]
     }));
