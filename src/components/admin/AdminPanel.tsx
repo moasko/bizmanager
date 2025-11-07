@@ -170,8 +170,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
         }
         
         // Flatten products from all businesses and add business name
-        return displayedBusinesses.flatMap(business => 
-            business.products.map(product => ({
+        return displayedBusinesses.flatMap((business: any) => 
+            business.products.map((product: any) => ({
                 ...product,
                 businessName: business.name
             }))
@@ -661,20 +661,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                     <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Coût des Marchandises Vendues</h3>
                         <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                            {formatCurrency(displayedBusinesses.reduce((sum, business) => sum + calculateCOGS(business.sales, business.products), 0))}
+                            {formatCurrency(displayedBusinesses.reduce((sum: number, business: any) => sum + calculateCOGS(business.sales, business.products), 0))}
                         </p>
                     </div>
                     <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Marge Brute</h3>
                         <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                            {formatCurrency(displayedBusinesses.reduce((sum, business) => 
+                            {formatCurrency(displayedBusinesses.reduce((sum: number, business: any) => 
                                 sum + calculateGrossProfit(business.sales, business.expenses, business.products), 0))}
                         </p>
                     </div>
                     <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Marge d'Exploitation</h3>
                         <p className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                            {formatCurrency(displayedBusinesses.reduce((sum, business) => 
+                            {formatCurrency(displayedBusinesses.reduce((sum: number, business: any) => 
                                 sum + calculateOperatingProfit(business.sales, business.expenses, business.products), 0))}
                         </p>
                     </div>
@@ -694,13 +694,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                     <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Dépenses Opérationnelles</h3>
                         <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                            {formatCurrency(displayedBusinesses.reduce((sum, business) => sum + calculateOperatingExpenses(business.expenses), 0))}
+                            {formatCurrency(displayedBusinesses.reduce((sum: number, business: any) => sum + calculateOperatingExpenses(business.expenses), 0))}
                         </p>
                     </div>
                     <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Investissements Ponctuels</h3>
                         <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                            {formatCurrency(displayedBusinesses.reduce((sum, business) => sum + calculateOneTimeExpenses(business.expenses), 0))}
+                            {formatCurrency(displayedBusinesses.reduce((sum: number, business: any) => sum + calculateOneTimeExpenses(business.expenses), 0))}
                         </p>
                     </div>
                     <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
@@ -726,7 +726,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                             className="px-3 py-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                         >
                             <option value="">Toutes les entreprises</option>
-                            {displayedBusinesses.map(business => (
+                            {displayedBusinesses.map((business: any) => (
                                 <option key={business.id} value={business.id}>{business.name}</option>
                             ))}
                         </select>
@@ -749,7 +749,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                             </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            {(selectedBusiness ? [selectedBusiness] : displayedBusinesses).map((business: Business) => {
+                            {(selectedBusiness ? [selectedBusiness] : displayedBusinesses).map((business: any) => {
                                 const businessSalesRevenue = calculateTotalSalesRevenue(business.sales);
                                 const businessExpensesAmount = calculateTotalExpenses(business.expenses);
                                 const businessProductValue = calculateTotalProductValue(business.products);
@@ -804,7 +804,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Répartition des Dépenses par Catégorie</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {Object.entries(
-                        displayedBusinesses.reduce((acc: Record<string, number>, business) => {
+                        displayedBusinesses.reduce((acc: Record<string, number>, business: any) => {
                             const breakdown = calculateExpenseBreakdown(business.expenses);
                             Object.entries(breakdown).forEach(([category, amount]) => {
                                 acc[category] = (acc[category] || 0) + amount;
