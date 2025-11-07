@@ -707,7 +707,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Retour sur Investissement</h3>
                         <p className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                             {totalExpensesAmount > 0 ? 
-                                formatPercentage((netProfit / displayedBusinesses.reduce((sum, business) => sum + calculateOneTimeExpenses(business.expenses), 0)) * 100) : 
+                                formatPercentage((netProfit / displayedBusinesses.reduce((sum: number, business: any) => sum + calculateOneTimeExpenses(business.expenses), 0)) * 100) : 
                                 '0.00%'}
                         </p>
                     </div>
@@ -781,15 +781,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">Total</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{totalSales}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{formatCurrency(totalRevenue)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">{formatCurrency(displayedBusinesses.reduce((sum, business) => sum + calculateCOGS(business.sales, business.products), 0))}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">{formatCurrency(displayedBusinesses.reduce((sum, business) => sum + calculateGrossProfit(business.sales, business.expenses, business.products), 0))}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">{formatCurrency(displayedBusinesses.reduce((sum, business) => sum + calculateOperatingExpenses(business.expenses), 0))}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-yellow-600">{formatCurrency(displayedBusinesses.reduce((sum, business) => sum + calculateOneTimeExpenses(business.expenses), 0))}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">{formatCurrency(displayedBusinesses.reduce((sum: number, business: any) => sum + calculateCOGS(business.sales, business.products), 0))}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">{formatCurrency(displayedBusinesses.reduce((sum: number, business: any) => sum + calculateGrossProfit(business.sales, business.expenses, business.products), 0))}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">{formatCurrency(displayedBusinesses.reduce((sum: number, business: any) => sum + calculateOperatingExpenses(business.expenses), 0))}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-yellow-600">{formatCurrency(displayedBusinesses.reduce((sum: number, business: any) => sum + calculateOneTimeExpenses(business.expenses), 0))}</td>
                                     <td className={`px-6 py-4 whitespace-nowrap text-sm ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                         {formatCurrency(netProfit)}
                                     </td>
                                     <td className={`px-6 py-4 whitespace-nowrap text-sm ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                        {formatPercentage((netProfit / (displayedBusinesses.reduce((sum, business) => sum + calculateOneTimeExpenses(business.expenses), 0) || 1)) * 100)}
+                                        {formatPercentage((netProfit / (displayedBusinesses.reduce((sum: number, business: any) => sum + calculateOneTimeExpenses(business.expenses), 0) || 1)) * 100)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{formatCurrency(totalProductValue)}</td>
                                 </tr>
@@ -917,7 +917,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                                 className="px-3 py-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                             >
                                 <option value="">Toutes les entreprises</option>
-                                {displayedBusinesses.map(business => (
+                                {displayedBusinesses.map((business: any) => (
                                     <option key={business.id} value={business.id}>{business.name}</option>
                                 ))}
                             </select>
