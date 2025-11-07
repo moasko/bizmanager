@@ -160,7 +160,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
 
     // Get selected business details
     const selectedBusiness = selectedBusinessId 
-        ? displayedBusinesses.find(b => b.id === selectedBusinessId) 
+        ? displayedBusinesses.find((b: any) => b.id === selectedBusinessId) 
         : null;
 
     // Get all products from all businesses or selected business
