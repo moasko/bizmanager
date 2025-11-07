@@ -26,7 +26,7 @@ const calculateCOGS = (sales: Sale[], products: Product[]): number => {
     // More accurate approach - track actual inventory costs
     // This considers the actual cost of products sold based on wholesale prices
     let totalCOGS = 0;
-    
+
     sales.forEach(sale => {
         const product = products.find(p => p.id === sale.productId);
         if (product) {
@@ -34,7 +34,7 @@ const calculateCOGS = (sales: Sale[], products: Product[]): number => {
             totalCOGS += product.wholesalePrice * sale.quantity;
         }
     });
-    
+
     return totalCOGS;
 };
 
@@ -47,28 +47,28 @@ const calculateTotalProductValue = (products: Product[]): number => {
 const calculateOperatingExpenses = (expenses: Expense[]): number => {
     // Filter for operating expenses (excluding one-time or capital expenses)
     return expenses
-        .filter(expense => !expense.category.toLowerCase().includes('capital') && 
-                          !expense.category.toLowerCase().includes('investment'))
+        .filter(expense => !expense.category.toLowerCase().includes('capital') &&
+            !expense.category.toLowerCase().includes('investment'))
         .reduce((sum, expense) => sum + expense.amount, 0);
 };
 
 // Helper function to calculate one-time expenses
 const calculateOneTimeExpenses = (expenses: Expense[]): number => {
     return expenses
-        .filter(expense => expense.category.toLowerCase().includes('capital') || 
-                          expense.category.toLowerCase().includes('investment'))
+        .filter(expense => expense.category.toLowerCase().includes('capital') ||
+            expense.category.toLowerCase().includes('investment'))
         .reduce((sum, expense) => sum + expense.amount, 0);
 };
 
 // Helper function to calculate expense breakdown
 const calculateExpenseBreakdown = (expenses: Expense[]): Record<string, number> => {
     const breakdown: Record<string, number> = {};
-    
+
     expenses.forEach(expense => {
         const category = expense.category || 'Autre';
         breakdown[category] = (breakdown[category] || 0) + expense.amount;
     });
-    
+
     return breakdown;
 };
 
@@ -104,7 +104,7 @@ const calculateEBITDA = (sales: Sale[], expenses: Expense[], products: Product[]
 const calculateNetProfitMargin = (sales: Sale[], expenses: Expense[], products: Product[]): number => {
     const totalRevenue = calculateTotalSalesRevenue(sales);
     if (totalRevenue === 0) return 0;
-    
+
     const netProfit = calculateNetProfit(sales, expenses, products);
     return (netProfit / totalRevenue) * 100;
 };
@@ -113,7 +113,7 @@ const calculateNetProfitMargin = (sales: Sale[], expenses: Expense[], products: 
 const calculateGrossProfitMargin = (sales: Sale[], products: Product[]): number => {
     const totalRevenue = calculateTotalSalesRevenue(sales);
     if (totalRevenue === 0) return 0;
-    
+
     const grossProfit = calculateGrossProfit(sales, [], products);
     return (grossProfit / totalRevenue) * 100;
 };
@@ -122,7 +122,7 @@ const calculateGrossProfitMargin = (sales: Sale[], products: Product[]): number 
 const calculateOperatingProfitMargin = (sales: Sale[], expenses: Expense[], products: Product[]): number => {
     const totalRevenue = calculateTotalSalesRevenue(sales);
     if (totalRevenue === 0) return 0;
-    
+
     const operatingProfit = calculateOperatingProfit(sales, expenses, products);
     return (operatingProfit / totalRevenue) * 100;
 };
@@ -131,7 +131,7 @@ const calculateOperatingProfitMargin = (sales: Sale[], expenses: Expense[], prod
 const calculateROI = (sales: Sale[], expenses: Expense[], products: Product[]): number => {
     const totalInvestment = calculateOneTimeExpenses(expenses);
     if (totalInvestment === 0) return 0;
-    
+
     const netProfit = calculateNetProfit(sales, expenses, products);
     return (netProfit / totalInvestment) * 100;
 };
@@ -159,8 +159,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
     const displayedUsers = fetchedUsers.length > 0 ? fetchedUsers : allUsers;
 
     // Get selected business details
-    const selectedBusiness = selectedBusinessId 
-        ? displayedBusinesses.find((b: any) => b.id === selectedBusinessId) 
+    const selectedBusiness = selectedBusinessId
+        ? displayedBusinesses.find((b: any) => b.id === selectedBusinessId)
         : null;
 
     // Get all products from all businesses or selected business
@@ -168,9 +168,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
         if (selectedBusiness) {
             return selectedBusiness.products;
         }
-        
+
         // Flatten products from all businesses and add business name
-        return displayedBusinesses.flatMap((business: any) => 
+        return displayedBusinesses.flatMap((business: any) =>
             business.products.map((product: any) => ({
                 ...product,
                 businessName: business.name
@@ -181,67 +181,67 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
     // Calculate statistics
     const totalBusinesses = displayedBusinesses.length;
     const totalUsersCount = displayedUsers.length;
-    
+
     // Calculate total sales, expenses, and products across all businesses
     const totalSales = displayedBusinesses.reduce((sum: number, business: Business) => sum + business.sales.length, 0);
     const totalExpenses = displayedBusinesses.reduce((sum: number, business: Business) => sum + business.expenses.length, 0);
     const totalProducts = displayedBusinesses.reduce((sum: number, business: Business) => sum + business.products.length, 0);
-    
+
     // Calculate financial totals
-    const totalRevenue = displayedBusinesses.reduce((sum: number, business: Business) => 
+    const totalRevenue = displayedBusinesses.reduce((sum: number, business: Business) =>
         sum + calculateTotalSalesRevenue(business.sales), 0);
-    const totalExpensesAmount = displayedBusinesses.reduce((sum: number, business: Business) => 
+    const totalExpensesAmount = displayedBusinesses.reduce((sum: number, business: Business) =>
         sum + calculateTotalExpenses(business.expenses), 0);
-    const totalProductValue = displayedBusinesses.reduce((sum: number, business: Business) => 
+    const totalProductValue = displayedBusinesses.reduce((sum: number, business: Business) =>
         sum + calculateTotalProductValue(business.products), 0);
-    
+
     // Calculate profit/loss
     const netProfit = totalRevenue - totalExpensesAmount;
 
     // Filter data based on selected period
     const filterByPeriod = (items: any[], dateField: string): any[] => {
         if (reportPeriod === 'all') return items;
-        
+
         const now = new Date();
         const filteredItems = items.filter(item => {
             const itemDate = new Date(item[dateField]);
-            
+
             switch (reportPeriod) {
                 case 'month':
-                    return itemDate.getMonth() === now.getMonth() && 
-                           itemDate.getFullYear() === now.getFullYear();
+                    return itemDate.getMonth() === now.getMonth() &&
+                        itemDate.getFullYear() === now.getFullYear();
                 case 'quarter':
                     const currentQuarter = Math.floor(now.getMonth() / 3);
                     const itemQuarter = Math.floor(itemDate.getMonth() / 3);
-                    return itemQuarter === currentQuarter && 
-                           itemDate.getFullYear() === now.getFullYear();
+                    return itemQuarter === currentQuarter &&
+                        itemDate.getFullYear() === now.getFullYear();
                 case 'year':
                     return itemDate.getFullYear() === now.getFullYear();
                 default:
                     return true;
             }
         });
-        
+
         return filteredItems;
     };
 
     // Filter sales by selected period
     const filterSalesByPeriod = (sales: Sale[]): Sale[] => {
         if (salesPeriod === 'all') return sales;
-        
+
         const now = new Date();
         return sales.filter(sale => {
             const saleDate = new Date(sale.date);
-            
+
             switch (salesPeriod) {
                 case 'month':
-                    return saleDate.getMonth() === now.getMonth() && 
-                           saleDate.getFullYear() === now.getFullYear();
+                    return saleDate.getMonth() === now.getMonth() &&
+                        saleDate.getFullYear() === now.getFullYear();
                 case 'quarter':
                     const currentQuarter = Math.floor(now.getMonth() / 3);
                     const saleQuarter = Math.floor(saleDate.getMonth() / 3);
-                    return saleQuarter === currentQuarter && 
-                           saleDate.getFullYear() === now.getFullYear();
+                    return saleQuarter === currentQuarter &&
+                        saleDate.getFullYear() === now.getFullYear();
                 case 'year':
                     return saleDate.getFullYear() === now.getFullYear();
                 default:
@@ -253,18 +253,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
     // Get filtered sales for display
     const getFilteredSales = (): Sale[] => {
         let allSales: Sale[] = [];
-        
+
         if (selectedBusiness) {
             allSales = filterSalesByPeriod(selectedBusiness.sales);
         } else {
-            allSales = displayedBusinesses.flatMap((business: any) => 
+            allSales = displayedBusinesses.flatMap((business: any) =>
                 filterSalesByPeriod(business.sales).map((sale: any) => ({
                     ...sale,
                     businessName: business.name
                 }))
             );
         }
-        
+
         return allSales;
     };
 
@@ -283,7 +283,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                 const operatingProfitMargin = calculateOperatingProfitMargin(business.sales, business.expenses, business.products);
                 const netProfitMargin = calculateNetProfitMargin(business.sales, business.expenses, business.products);
                 const roi = calculateROI(business.sales, business.expenses, business.products);
-                
+
                 return {
                     ...business,
                     totalRevenue,
@@ -321,7 +321,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
             const roi = calculateROI(business.sales, business.expenses, business.products);
             const inventoryValue = calculateTotalProductValue(business.products);
             const expenseBreakdown = calculateExpenseBreakdown(business.expenses);
-            
+
             return {
                 business,
                 totalRevenue,
@@ -341,7 +341,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                 expenseBreakdown
             };
         });
-        
+
         return businessesWithMetrics;
     };
 
@@ -385,7 +385,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Marge Brute</h3>
                         <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                             {totalRevenue > 0 ? formatPercentage(calculateGrossProfitMargin(
-                                displayedBusinesses.flatMap((b: any) => b.sales), 
+                                displayedBusinesses.flatMap((b: any) => b.sales),
                                 displayedBusinesses.flatMap((b: any) => b.products)
                             )) : '0.00%'}
                         </p>
@@ -395,8 +395,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Marge d'Exploitation</h3>
                         <p className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                             {totalRevenue > 0 ? formatPercentage(calculateOperatingProfitMargin(
-                                displayedBusinesses.flatMap((b: any) => b.sales), 
-                                displayedBusinesses.flatMap((b: any) => b.expenses), 
+                                displayedBusinesses.flatMap((b: any) => b.sales),
+                                displayedBusinesses.flatMap((b: any) => b.expenses),
                                 displayedBusinesses.flatMap((b: any) => b.products)
                             )) : '0.00%'}
                         </p>
@@ -483,26 +483,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                         </thead>
                         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             {getFilteredSales()
-                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                            .slice(0, 5)
-                            .map((sale: any, index) => (
-                                <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        {new Date(sale.date).toLocaleDateString('fr-FR')}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                                            Vente
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                                        {formatCurrency(sale.total)}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        {sale.businessName || (selectedBusiness ? selectedBusiness.name : 'Multiple')}
-                                    </td>
-                                </tr>
-                            ))}
+                                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                .slice(0, 5)
+                                .map((sale: any, index) => (
+                                    <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                            {new Date(sale.date).toLocaleDateString('fr-FR')}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                                Vente
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+                                            {formatCurrency(sale.total)}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                            {sale.businessName || (selectedBusiness ? selectedBusiness.name : 'Multiple')}
+                                        </td>
+                                    </tr>
+                                ))}
                         </tbody>
                     </table>
                 </div>
@@ -597,19 +597,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{user.email}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                            user.role === 'Admin' 
-                                                ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200' 
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.role === 'Admin'
+                                                ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
                                                 : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
-                                        }`}>
+                                            }`}>
                                             {user.role}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        {user.role === 'Admin' 
-                                            ? 'Toutes' 
-                                            : user.managedBusinessIds 
-                                                ? `${user.managedBusinessIds.length} entreprise(s)` 
+                                        {user.role === 'Admin'
+                                            ? 'Toutes'
+                                            : user.managedBusinessIds
+                                                ? `${user.managedBusinessIds.length} entreprise(s)`
                                                 : 'Aucune'}
                                     </td>
                                 </tr>
@@ -667,14 +666,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                     <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Marge Brute</h3>
                         <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                            {formatCurrency(displayedBusinesses.reduce((sum: number, business: any) => 
+                            {formatCurrency(displayedBusinesses.reduce((sum: number, business: any) =>
                                 sum + calculateGrossProfit(business.sales, business.expenses, business.products), 0))}
                         </p>
                     </div>
                     <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Marge d'Exploitation</h3>
                         <p className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                            {formatCurrency(displayedBusinesses.reduce((sum: number, business: any) => 
+                            {formatCurrency(displayedBusinesses.reduce((sum: number, business: any) =>
                                 sum + calculateOperatingProfit(business.sales, business.expenses, business.products), 0))}
                         </p>
                     </div>
@@ -686,7 +685,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                     </div>
                 </div>
             </div>
-            
+
             {/* Expense Breakdown */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Répartition des Dépenses</h2>
@@ -706,8 +705,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                     <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Retour sur Investissement</h3>
                         <p className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                            {totalExpensesAmount > 0 ? 
-                                formatPercentage((netProfit / displayedBusinesses.reduce((sum: number, business: any) => sum + calculateOneTimeExpenses(business.expenses), 0)) * 100) : 
+                            {totalExpensesAmount > 0 ?
+                                formatPercentage((netProfit / displayedBusinesses.reduce((sum: number, business: any) => sum + calculateOneTimeExpenses(business.expenses), 0)) * 100) :
                                 '0.00%'}
                         </p>
                     </div>
@@ -720,7 +719,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                     <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Résumé Financier par Entreprise</h2>
                     <div className="flex items-center space-x-2">
                         <span className="text-sm text-gray-600 dark:text-gray-400">Sélectionner une entreprise:</span>
-                        <select 
+                        <select
                             value={selectedBusinessId || ''}
                             onChange={(e) => setSelectedBusinessId(e.target.value || null)}
                             className="px-3 py-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -754,7 +753,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                                 const businessExpensesAmount = calculateTotalExpenses(business.expenses);
                                 const businessProductValue = calculateTotalProductValue(business.products);
                                 const businessProfit = businessSalesRevenue - businessExpensesAmount;
-                                
+
                                 return (
                                     <tr key={business.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{business.name}</td>
@@ -803,23 +802,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Répartition des Dépenses par Catégorie</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {Object.entries(
-                        displayedBusinesses.reduce((acc: Record<string, number>, business: any) => {
-                            const breakdown = calculateExpenseBreakdown(business.expenses);
-                            Object.entries(breakdown).forEach(([category, amount]) => {
-                                acc[category] = (acc[category] || 0) + amount;
-                            });
-                            return acc;
-                        }, {})
-                    ).map(([category, amount]: [string, number]) => (
-                        <div key={category} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">{category}</h3>
-                            <p className="text-xl font-bold text-red-600 dark:text-red-400">{formatCurrency(amount)}</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                {totalExpensesAmount > 0 ? `${((amount / totalExpensesAmount) * 100).toFixed(1)}% des dépenses totales` : '0%'}
-                            </p>
-                        </div>
-                    ))}
+                    {(() => {
+                        const expenseData = Object.entries(
+                            displayedBusinesses.reduce((acc: Record<string, number>, business: any) => {
+                                const breakdown = calculateExpenseBreakdown(business.expenses);
+                                Object.entries(breakdown).forEach(([category, amount]) => {
+                                    acc[category] = (acc[category] || 0) + amount;
+                                });
+                                return acc;
+                            }, {} as Record<string, number>)
+                        ) as [string, number][];
+                        
+                        return expenseData.map(([category, amount]) => (
+                            <div key={category} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">{category}</h3>
+                                <p className="text-xl font-bold text-red-600 dark:text-red-400">{formatCurrency(amount)}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                    {totalExpensesAmount > 0 ? `${((amount / totalExpensesAmount) * 100).toFixed(1)}% des dépenses totales` : '0%'}
+                                </p>
+                            </div>
+                        ));
+                    })()}
                 </div>
             </div>
         </div>
@@ -830,7 +833,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Panneau d'Administration</h1>
                 <div className="flex space-x-4">
-                    <select 
+                    <select
                         value={reportPeriod}
                         onChange={(e) => setReportPeriod(e.target.value as any)}
                         className="px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -845,56 +848,51 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                     </button>
                 </div>
             </div>
-            
+
             {/* Admin View Navigation */}
             <div className="flex flex-wrap gap-2">
-                <button 
+                <button
                     onClick={() => setAdminView('overview')}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                        adminView === 'overview' 
-                            ? 'bg-primary-600 text-white' 
+                    className={`px-4 py-2 rounded-lg transition-colors ${adminView === 'overview'
+                            ? 'bg-primary-600 text-white'
                             : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                    }`}
+                        }`}
                 >
                     Vue d'Ensemble
                 </button>
-                <button 
+                <button
                     onClick={() => setAdminView('businesses')}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                        adminView === 'businesses' 
-                            ? 'bg-primary-600 text-white' 
+                    className={`px-4 py-2 rounded-lg transition-colors ${adminView === 'businesses'
+                            ? 'bg-primary-600 text-white'
                             : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                    }`}
+                        }`}
                 >
                     Entreprises
                 </button>
-                <button 
+                <button
                     onClick={() => setAdminView('users')}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                        adminView === 'users' 
-                            ? 'bg-primary-600 text-white' 
+                    className={`px-4 py-2 rounded-lg transition-colors ${adminView === 'users'
+                            ? 'bg-primary-600 text-white'
                             : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                    }`}
+                        }`}
                 >
                     Utilisateurs
                 </button>
-                <button 
+                <button
                     onClick={() => setAdminView('financial')}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                        adminView === 'financial' 
-                            ? 'bg-primary-600 text-white' 
+                    className={`px-4 py-2 rounded-lg transition-colors ${adminView === 'financial'
+                            ? 'bg-primary-600 text-white'
                             : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                    }`}
+                        }`}
                 >
                     Finances
                 </button>
-                <button 
+                <button
                     onClick={() => setAdminView('products')}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                        adminView === 'products' 
-                            ? 'bg-primary-600 text-white' 
+                    className={`px-4 py-2 rounded-lg transition-colors ${adminView === 'products'
+                            ? 'bg-primary-600 text-white'
                             : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                    }`}
+                        }`}
                 >
                     Produits
                 </button>
@@ -911,7 +909,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                         <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Liste des Produits</h2>
                         <div className="flex items-center space-x-2">
                             <span className="text-sm text-gray-600 dark:text-gray-400">Sélectionner une entreprise:</span>
-                            <select 
+                            <select
                                 value={selectedBusinessId || ''}
                                 onChange={(e) => setSelectedBusinessId(e.target.value || null)}
                                 className="px-3 py-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
