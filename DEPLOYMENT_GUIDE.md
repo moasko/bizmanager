@@ -302,7 +302,7 @@ To secure your application with HTTPS, you can use Let's Encrypt:
 sudo apt install -y certbot python3-certbot-nginx
 
 # Obtain SSL certificate
-sudo certbot --nginx -d your-domain.com -d www.your-domain.com
+sudo certbot --nginx -d bizmanager.devsongue.com -d www.bizmanager.devsongue.com
 ```
 
 Follow the prompts to complete the SSL certificate installation.
