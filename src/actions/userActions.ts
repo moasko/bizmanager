@@ -8,12 +8,12 @@ export async function getUsers(): Promise<ActionResult<User[]>> {
   try {
     const users = await prisma.user.findMany();
     // Map Prisma user objects to our User interface
-    const mappedUsers: User[] = users.map(user => ({
+    const mappedUsers: User[] = users.map((user: any) => ({
       id: user.id,
       name: user.name,
       email: user.email,
       password: user.password ?? undefined,
-      role: user.role as 'Admin' | 'Gérant',
+      role: user.role,
       avatarUrl: user.avatarUrl,
     }));
     return { success: true, data: mappedUsers };
@@ -52,7 +52,7 @@ export async function createUser(userData: Omit<User, 'id'>): Promise<ActionResu
       name: user.name,
       email: user.email,
       password: user.password ?? undefined,
-      role: user.role as 'Admin' | 'Gérant',
+      role: user.role,
       avatarUrl: user.avatarUrl,
     };
     
@@ -83,7 +83,7 @@ export async function updateUser(id: string, userData: Partial<User>): Promise<A
       name: user.name,
       email: user.email,
       password: user.password ?? undefined,
-      role: user.role as 'Admin' | 'Gérant',
+      role: user.role,
       avatarUrl: user.avatarUrl,
     };
     
