@@ -33,7 +33,7 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
     const createSaleMutation = useCreateSale();
 
     // Convert database sale objects to Sale type
-    const formattedSales: Sale[] = sales.map(sale => ({
+    const formattedSales: Sale[] = sales.map((sale: any) => ({
         ...sale,
         date: typeof sale.date === 'string' ? sale.date : sale.date.toISOString().split('T')[0],
         saleType: sale.saleType as 'Vente au détail' | 'Vente en gros'
