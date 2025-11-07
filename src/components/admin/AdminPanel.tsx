@@ -811,7 +811,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ allBusinesses, allUsers 
                             });
                             return acc;
                         }, {})
-                    ).map(([category, amount]) => (
+                    ).map(([category, amount]: [string, number]) => (
                         <div key={category} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                             <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">{category}</h3>
                             <p className="text-xl font-bold text-red-600 dark:text-red-400">{formatCurrency(amount)}</p>
