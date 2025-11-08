@@ -5,6 +5,18 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/shared/Button';
 import { useAuth } from '@/contexts/AuthContext';
 
+// Fonction pour lire un cookie
+function getCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(';').shift();
+  }
+  return undefined;
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -12,18 +24,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [redirectUrl, setRedirectUrl] = useState('/dashboard');
   const router = useRouter();
   const { login, currentUser } = useAuth();
-
-  // Get redirect URL from localStorage (set by middleware)
-  useEffect(() => {
-    const storedRedirect = localStorage.getItem('redirectUrl');
-    if (storedRedirect) {
-      setRedirectUrl(storedRedirect);
-      localStorage.removeItem('redirectUrl');
-    }
-  }, []);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -37,40 +39,47 @@ export default function LoginPage() {
       setError('Veuillez entrer votre adresse email');
       return false;
     }
-    
+
     if (!/\S+@\S+\.\S+/.test(email)) {
       setError('Veuillez entrer une adresse email valide');
       return false;
     }
-    
+
     if (!password) {
       setError('Veuillez entrer votre mot de passe');
       return false;
     }
-    
+
     if (password.length < 6) {
       setError('Le mot de passe doit contenir au moins 6 caractères');
       return false;
     }
-    
+
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       // Try to authenticate with the server
       const success = await login(email, password);
-      
+
       if (success) {
+        // Get redirect URL from cookie and decode it
+        const redirectUrlEncoded = getCookie('redirect-url');
+        const redirectUrl = redirectUrlEncoded ? decodeURIComponent(redirectUrlEncoded) : '/dashboard';
+        
+        // Clear the redirect cookie
+        document.cookie = 'redirect-url=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        
         // Add a small delay to ensure state is updated before redirect
         setTimeout(() => {
           router.push(redirectUrl);
@@ -101,7 +110,7 @@ export default function LoginPage() {
             Entrez vos identifiants pour accéder à votre espace
           </p>
         </div>
-        
+
         {/* Demo credentials info */}
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
           <h3 className="text-sm font-medium text-blue-800">Identifiants de démonstration</h3>
@@ -110,7 +119,7 @@ export default function LoginPage() {
             <span className="font-medium">Gérant:</span> jean@bizsuite.com / password123
           </p>
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="rounded-md bg-red-50 p-4 animate-shake">
@@ -126,7 +135,7 @@ export default function LoginPage() {
               </div>
             </div>
           )}
-          
+
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">
@@ -144,7 +153,7 @@ export default function LoginPage() {
                 placeholder="votre@email.com"
               />
             </div>
-            
+
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Mot de passe
@@ -223,7 +232,7 @@ export default function LoginPage() {
             </Button>
           </div>
         </form>
-        
+
         <div className="mt-6 text-center text-sm text-gray-600">
           <p>
             En vous connectant, vous acceptez nos{' '}
