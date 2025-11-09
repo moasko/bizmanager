@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/shared/Button';
 import { useAuth } from '@/contexts/AuthContext';
+import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
 
 // Fonction pour lire un cookie
 function getCookie(name: string): string | undefined {
@@ -98,25 +99,14 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center w-full justify-center bg-gradient-to-br from-primary-50 to-gray-100 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl">
         <div>
-          <div className="mx-auto h-16 w-16 rounded-full bg-primary-500 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a9 9 0 00-9-9" />
-            </svg>
+          <div className="mx-auto h-24 w-24 rounded-full flex items-center justify-center">
+            <img src="/logo.svg" alt="BizSuite Logo" className='h-24 w-24 rounded-full text-white' />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Connectez-vous à votre compte
+            Connectez-vous
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Entrez vos identifiants pour accéder à votre espace
-          </p>
-        </div>
-
-        {/* Demo credentials info */}
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-          <h3 className="text-sm font-medium text-blue-800">Identifiants de démonstration</h3>
-          <p className="mt-1 text-sm text-blue-700">
-            <span className="font-medium">Admin:</span> admin@bizsuite.com / password123<br />
-            <span className="font-medium">Gérant:</span> jean@bizsuite.com / password123
           </p>
         </div>
 
@@ -141,17 +131,22 @@ export default function LoginPage() {
               <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">
                 Adresse Email
               </label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition duration-200"
-                placeholder="votre@email.com"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="email-address"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition duration-200"
+                  placeholder="votre@email.com"
+                />
+              </div>
             </div>
 
             <div>
@@ -159,6 +154,9 @@ export default function LoginPage() {
                 Mot de passe
               </label>
               <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
                   id="password"
                   name="password"
@@ -167,7 +165,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition duration-200 pr-12"
+                  className="appearance-none relative block w-full pl-10 pr-12 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition duration-200"
                   placeholder="••••••••"
                 />
                 <button
@@ -176,39 +174,12 @@ export default function LoginPage() {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
+                    <EyeOff className="h-5 w-5 text-gray-500" />
                   ) : (
-                    <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                    </svg>
+                    <Eye className="h-5 w-5 text-gray-500" />
                   )}
                 </button>
               </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                Se souvenir de moi
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <a href="#" className="font-medium text-primary-600 hover:text-primary-500">
-                Mot de passe oublié?
-              </a>
             </div>
           </div>
 
@@ -216,7 +187,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 rounded-lg transition duration-200"
+              className="group relative w-full flex justify-center py-3 px-4 rounded-lg transition duration-200 bg-green-600 hover:bg-green-700 focus:ring-green-500"
             >
               {isLoading ? (
                 <>
@@ -227,7 +198,10 @@ export default function LoginPage() {
                   Connexion en cours...
                 </>
               ) : (
-                "Se connecter"
+                <>
+                  <LogIn className="h-5 w-5 mr-2" />
+                  Se connecter
+                </>
               )}
             </Button>
           </div>
