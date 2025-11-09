@@ -8,11 +8,32 @@ interface BusinessDashboardProps {
   business: Business;
 }
 
+// Helper function to calculate cost of goods sold (COGS)
+const calculateCOGS = (sales: any[], products: any[]): number => {
+    return sales.reduce((sum, sale) => {
+        // Find the product to get its wholesale price
+        const product = products.find((p: any) => p.id === sale.productId);
+        const wholesalePrice = product ? product.wholesalePrice : 0;
+        return sum + (wholesalePrice * sale.quantity);
+    }, 0);
+};
+
+// Helper function to calculate operational expenses
+const calculateOperationalExpenses = (expenses: any[]): number => {
+    return expenses.reduce((sum, expense) => sum + expense.amount, 0);
+};
+
+// Helper function to format currency
+const formatCurrency = (amount: number): string => {
+    return `${amount?.toLocaleString('fr-FR')} FCFA`;
+};
+
 export const BusinessDashboard: React.FC<BusinessDashboardProps> = ({ business }) => {
   // Calculate business statistics
   const totalSales = business.sales.reduce((sum, sale) => sum + sale.total, 0);
-  const totalExpenses = business.expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const netProfit = totalSales - totalExpenses;
+  const totalCOGS = calculateCOGS(business.sales, business.products);
+  const totalOperationalExpenses = calculateOperationalExpenses(business.expenses);
+  const netProfit = totalSales - totalCOGS - totalOperationalExpenses;
   const totalProducts = business.products.length;
   const lowStockProducts = business.products.filter(p => p.stock < 10).length;
 
@@ -26,31 +47,31 @@ export const BusinessDashboard: React.FC<BusinessDashboardProps> = ({ business }
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
-          title="Ventes totales" 
-          value={`${totalSales.toLocaleString('fr-FR')} FCFA`} 
+          title="Revenu Total" 
+          value={formatCurrency(totalSales)} 
           change="+12.5%" 
           icon="revenue"
         />
         
         <StatCard 
-          title="Dépenses" 
-          value={`${totalExpenses.toLocaleString('fr-FR')} FCFA`} 
-          change="-2.3%" 
+          title="Coût des Marchandises" 
+          value={formatCurrency(totalCOGS)} 
+          change="-2.1%" 
           icon="expense"
         />
         
         <StatCard 
-          title="Bénéfice net" 
-          value={`${netProfit.toLocaleString('fr-FR')} FCFA`} 
-          change="+8.7%" 
-          icon="profit"
+          title="Dépenses Opérationnelles" 
+          value={formatCurrency(totalOperationalExpenses)} 
+          change="-5.2%" 
+          icon="expense"
         />
         
         <StatCard 
-          title="Produits" 
-          value={totalProducts.toString()} 
-          change={lowStockProducts > 0 ? `${lowStockProducts} en rupture` : "Tous en stock"} 
-          icon="clients"
+          title="Bénéfice Net" 
+          value={formatCurrency(netProfit)} 
+          change="+8.1%" 
+          icon="profit"
         />
       </div>
 

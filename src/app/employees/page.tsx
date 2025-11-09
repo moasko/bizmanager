@@ -3,7 +3,7 @@
 import React from 'react';
 import { Employees } from '@/components/employees/Employees';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { useUsers, useCreateUser, useUpdateUser, useDeleteUser } from '@/hooks/useUser';
+import { useUsers, useCreateUser, useUpdateUser } from '@/hooks/useUser';
 import { useBusinesses } from '@/hooks/useBusiness';
 
 export default function EmployeesPage() {
@@ -11,7 +11,6 @@ export default function EmployeesPage() {
   const { data: businesses = [], isLoading: isBusinessesLoading } = useBusinesses();
   const { mutateAsync: createUser } = useCreateUser();
   const { mutateAsync: updateUser } = useUpdateUser();
-  const { mutateAsync: deleteUser } = useDeleteUser();
   
   if (isUsersLoading || isBusinessesLoading) {
     return <div className="flex justify-center items-center h-64">Chargement des employés...</div>;
@@ -33,14 +32,6 @@ export default function EmployeesPage() {
     }
   };
 
-  const handleDeleteUser = async (userId: string) => {
-    try {
-      await deleteUser(userId);
-    } catch (error) {
-      console.error('Error deleting user:', error);
-    }
-  };
-
   return (
     <MainLayout businesses={businesses}>
       <div className="p-4 md:p-8">
@@ -48,7 +39,6 @@ export default function EmployeesPage() {
           users={users} 
           onAddUser={handleAddUser}
           onUpdateUser={handleUpdateUser}
-          onDeleteUser={handleDeleteUser}
           allBusinesses={businesses} 
         />
       </div>

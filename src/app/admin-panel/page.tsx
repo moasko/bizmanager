@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { SimplifiedDashboard } from '@/components/admin/SimplifiedDashboard';
+import { AdminPanel } from '@/components/admin/AdminPanel';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useBusinesses } from '@/hooks/useBusiness';
 import { useUsers } from '@/hooks/useUser';
@@ -17,7 +17,7 @@ export default function AdminPanelPage() {
   return (
     <MainLayout businesses={businesses}>
       <div className="p-4 md:p-8">
-        <SimplifiedDashboard allBusinesses={businesses} allUsers={users} />
+        <AdminPanel allBusinesses={businesses} allUsers={users} />
       </div>
     </MainLayout>
   );

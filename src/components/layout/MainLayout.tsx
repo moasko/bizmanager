@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
@@ -19,13 +19,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const { currentUser, logout } = useAuth();
   const router = useRouter();
   const [activeBusinessId, setActiveBusinessId] = useState<string>(businesses[0]?.id || '');
-  
-  // Gérer la redirection vers la page de login si l'utilisateur n'est pas connecté
-  useEffect(() => {
-    if (!currentUser) {
-      router.push('/login');
-    }
-  }, [currentUser, router]);
   
   const activeBusiness = useMemo(() => {
     if (!currentUser) return businesses[0]; 
@@ -71,13 +64,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     router.push('/login');
   };
 
-  // Si l'utilisateur n'est pas connecté, retourner null pendant la redirection
+  // Si l'utilisateur n'est pas connecté, le rediriger vers la page de login
   if (!currentUser) {
-    return null;
+    router.push('/login');
+    return null; // Retourne null pendant la redirection
   }
 
   return (
-    <div className="flex w-full">
+    <>
       <Sidebar currentUser={currentUser} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
@@ -92,6 +86,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           {children}
         </main>
       </div>
-    </div>
+    </>
   );
 };
