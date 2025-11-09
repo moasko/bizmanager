@@ -14,26 +14,11 @@ export default function DashboardPage() {
     return <div className="flex justify-center items-center h-64">Chargement du tableau de bord...</div>;
   }
   
-  // Cette page est maintenant rendue à l'intérieur du MainLayout, 
-  // donc elle n'a pas besoin de gérer l'entreprise active elle-même.
-  // Le MainLayout s'occupe de gérer l'entreprise active et de la passer au Header.
-  
-  return (
-    <MainLayout businesses={businesses}>
-      <DashboardPageContent businesses={businesses} />
-    </MainLayout>
-  );
-}
-
-// Composant séparé pour le contenu de la page
-const DashboardPageContent = ({ businesses }: { businesses: any[] }) => {
-  const { currentUser } = useAuth();
-  
   // Filtrer les entreprises en fonction de l'utilisateur actuel
   let activeBusiness;
   
   if (currentUser?.role === 'Admin') {
-    // Pour les administrateurs, utiliser la première entreprise (ou une logique différente si nécessaire)
+    // Pour les administrateurs, utiliser la première entreprise
     activeBusiness = businesses[0];
   } else if (currentUser?.role === 'Gérant' && currentUser.managedBusinessIds && currentUser.managedBusinessIds.length > 0) {
     // Pour les gérants, utiliser la première entreprise assignée
@@ -50,8 +35,10 @@ const DashboardPageContent = ({ businesses }: { businesses: any[] }) => {
   }
   
   return (
-    <div className="p-4 md:p-8">
-      <Dashboard business={activeBusiness} />
-    </div>
+    <MainLayout businesses={businesses}>
+      <div className="p-4 md:p-8">
+        <Dashboard business={activeBusiness} />
+      </div>
+    </MainLayout>
   );
-};
+}
