@@ -41,9 +41,9 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <link rel="shortcut icon" href="/favicon.ico" />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} dark:bg-gray-900 dark:text-white`}>
         <Providers>
-          <div className="flex h-screen bg-gray-50 text-gray-800">
+          <div className="flex h-screen bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-white">
             {/* Sidebar and Header will be added in individual pages */}
             {children}
           </div>

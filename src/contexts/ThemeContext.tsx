@@ -24,15 +24,16 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } else if (systemPrefersDark) {
       setTheme('dark');
     }
-    
-    // Apply theme to document
-    document.documentElement.classList.toggle('dark', theme === 'dark');
   }, []);
 
   useEffect(() => {
     // Save theme to localStorage and apply to document
     localStorage.setItem('theme', theme);
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }, [theme]);
 
   const toggleTheme = () => {
