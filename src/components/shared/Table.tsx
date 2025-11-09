@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export interface Column<T> {
@@ -20,8 +19,8 @@ export const Table = <T extends { id: string },>(
             <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                     <tr>
-                        {columns.map((col) => (
-                            <th key={String(col.accessor)} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {columns.map((col, index) => (
+                            <th key={`${String(col.accessor)}-${index}`} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {col.header}
                             </th>
                         ))}
@@ -30,8 +29,8 @@ export const Table = <T extends { id: string },>(
                 <tbody className="bg-white divide-y divide-gray-200">
                     {data.map((item: any) => (
                         <tr key={item.id} className="hover:bg-gray-50">
-                            {columns.map((col) => (
-                                <td key={String(col.accessor)} className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {columns.map((col, index) => (
+                                <td key={`${String(col.accessor)}-${index}`} className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                     {col.render ? col.render(item) : (item[col.accessor] as React.ReactNode)}
                                 </td>
                             ))}
