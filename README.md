@@ -1,4 +1,4 @@
-# Business Manager - Modernized Version
+# devSongue suite - Modernized Version
 
 This is a modernized version of the multi-company management suite, upgraded with Next.js, Prisma, PostgreSQL, and React Query while preserving the original UI and functionality.
 

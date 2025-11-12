@@ -8,7 +8,7 @@ import { Providers } from "./providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Business Manager",
+  title: "devSongue suite",
   description: "Multi-company management suite",
   manifest: "/manifest.json",
   icons: {
@@ -28,10 +28,10 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <head>
-        <meta name="application-name" content="Business Manager" />
+        <meta name="application-name" content="devSongue suite" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Business Manager" />
+        <meta name="apple-mobile-web-app-title" content="devSongue suite" />
         <meta name="description" content="Multi-company management suite" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />

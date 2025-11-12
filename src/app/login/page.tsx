@@ -1,82 +1,46 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/shared/Button';
-import { useAuth } from '@/contexts/AuthContext';
-import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
-
-// Fonction pour lire un cookie
-function getCookie(name: string): string | undefined {
-  if (typeof document === 'undefined') return undefined;
-  
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) {
-    return parts.pop()?.split(';').shift();
-  }
-  return undefined;
-}
+import { Lock, Mail, LogIn, Eye, EyeOff } from 'lucide-react';
+import { Button } from '@/components/shared';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const router = useRouter();
-  const { login, currentUser } = useAuth();
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (currentUser) {
-      router.push('/dashboard');
-    }
-  }, [currentUser, router]);
-
-  const validateForm = () => {
-    if (!email) {
-      setError('Veuillez entrer votre adresse email');
-      return false;
-    }
-
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setError('Veuillez entrer une adresse email valide');
-      return false;
-    }
-
-    if (!password) {
-      setError('Veuillez entrer votre mot de passe');
-      return false;
-    }
-
-    if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
-      return false;
-    }
-
-    return true;
-  };
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     setError('');
 
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsLoading(true);
-
     try {
-      // Try to authenticate with the server
-      const success = await login(email, password);
-
-      if (success) {
-        // Get redirect URL from cookie and decode it
-        const redirectUrlEncoded = getCookie('redirect-url');
-        const redirectUrl = redirectUrlEncoded ? decodeURIComponent(redirectUrlEncoded) : '/dashboard';
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock authentication - in a real app, this would be an API call
+      if ((email === 'admin@devsonguesuite.ci' && password === 'password123') || 
+          (email === 'awa.diallo@devsonguesuite.ci' && password === 'password123')) {
+        
+        // Store user info in localStorage (in a real app, this would be a secure token)
+        const user = email === 'admin@devsonguesuite.ci' 
+          ? { id: 'user-1', name: 'Koffi Adjoa', email, role: 'Admin' }
+          : { id: 'user-2', name: 'Awa Diallo', email, role: 'Gérant' };
+        
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        
+        // Check for redirect URL in cookies
+        const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+          const [name, value] = cookie.trim().split('=');
+          acc[name] = value;
+          return acc;
+        }, {} as Record<string, string>);
+        
+        const redirectUrl = cookies['redirect-url'] || (user.role === 'Admin' ? '/admin-panel' : '/dashboard');
         
         // Clear the redirect cookie
         document.cookie = 'redirect-url=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
@@ -86,7 +50,7 @@ export default function LoginPage() {
           router.push(redirectUrl);
         }, 100);
       } else {
-        setError('Email ou mot de passe incorrect. Utilisez admin@bizsuite.com / password123');
+        setError('Email ou mot de passe incorrect. Utilisez admin@devsonguesuite.ci / password123');
       }
     } catch (_error) {
       setError('Une erreur est survenue. Veuillez réessayer.');
@@ -100,7 +64,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl">
         <div>
           <div className="mx-auto h-24 w-24 rounded-full flex items-center justify-center">
-            <img src="/logo.svg" alt="BizSuite Logo" className='h-24 w-24 rounded-full text-white' />
+            <img src="/logo.png" alt="devSongue suite Logo" className='h-24 w-24 rounded-full text-white' />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Connectez-vous

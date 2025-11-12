@@ -8,7 +8,7 @@ async function main() {
     data: {
       id: 'user-1',
       name: 'Koffi Adjoa',
-      email: 'koffi.adjoa@bizsuite.ci',
+      email: 'koffi.adjoa@devsonguesuite.ci',
       password: 'password123',
       role: 'Admin',
       avatarUrl: 'https://i.pravatar.cc/150?u=admin',
@@ -19,7 +19,7 @@ async function main() {
     data: {
       id: 'user-2',
       name: 'Awa Diallo',
-      email: 'awa.diallo@bizsuite.ci',
+      email: 'awa.diallo@devsonguesuite.ci',
       password: 'password123',
       role: 'Gérant',
       avatarUrl: 'https://i.pravatar.cc/150?u=gerant',
