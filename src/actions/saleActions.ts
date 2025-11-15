@@ -18,17 +18,20 @@ export async function getSales(businessId: string) {
 }
 
 // Create a new sale
-export async function createSale(businessId: string, saleData: Omit<Sale, 'id' | 'reference' | 'createdAt' | 'updatedAt' | 'deletedAt'>) {
+export async function createSale(businessId: string, saleData: Omit<Sale, 'id' | 'reference' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'businessId'>) {
   try {
     // Generate a unique reference
     const reference = `REF-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    
+    // Si clientId est une chaîne vide, le définir comme null
+    const clientId = saleData.clientId === '' ? null : saleData.clientId;
     
     const sale = await prisma.sale.create({
       data: {
         id: `sale-${Date.now()}`,
         reference: reference,
         date: new Date(saleData.date),
-        clientId: saleData.clientId,
+        clientId: clientId,
         productId: saleData.productId,
         productName: saleData.productName,
         quantity: saleData.quantity,

@@ -47,71 +47,79 @@ export const Receipt: React.FC<ReceiptProps> = ({ sales, client, products, busin
     <div>
       <Button 
         onClick={handlePrint} 
-        className="flex items-center"
+        className="flex items-center mb-4"
         variant="secondary"
       >
         <Printer className="h-4 w-4 mr-2" />
         Imprimer le reçu
       </Button>
       
-      <div ref={componentRef} className="hidden">
-        <div className="p-8 max-w-md mx-auto bg-white">
-          <div className="text-center border-b border-gray-300 pb-4 mb-4">
-            <h1 className="text-2xl font-bold">{businessName}</h1>
-            <p className="text-gray-600">Reçu de vente</p>
-            <p className="text-sm text-gray-500 mt-1">
-              Date: {new Date().toLocaleDateString('fr-FR')}
+      <div ref={componentRef} className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
+        <div className="text-center border-b border-gray-300 pb-4 mb-4">
+          <h1 className="text-2xl font-bold text-gray-800">{businessName}</h1>
+          <p className="text-gray-600">Reçu de vente</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Date: {new Date().toLocaleDateString('fr-FR')}
+          </p>
+          {sales.length > 0 && (
+            <p className="text-sm text-gray-500">
+              Réf: {sales[0].reference}
             </p>
-          </div>
-          
-          {client && (
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-2">Client</h2>
-              <p className="text-gray-800">{client.name}</p>
-              {client.telephone && <p className="text-gray-600">Tél: {client.telephone}</p>}
-              {client.address && <p className="text-gray-600">Adresse: {client.address}</p>}
-            </div>
           )}
-          
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-2">Détails des produits</h2>
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-300">
-                  <th className="text-left py-2">Produit</th>
-                  <th className="text-right py-2">Qté</th>
-                  <th className="text-right py-2">Prix</th>
-                  <th className="text-right py-2">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.values(productTotals).map((product, index) => (
-                  <tr key={index} className="border-b border-gray-200">
-                    <td className="py-2">{product.productName}</td>
-                    <td className="text-right py-2">{product.quantity}</td>
-                    <td className="text-right py-2">
-                      {Math.round(product.total / product.quantity).toLocaleString('fr-FR')} FCFA
-                    </td>
-                    <td className="text-right py-2 font-medium">
-                      {product.total.toLocaleString('fr-FR')} FCFA
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        </div>
+        
+        {client && (
+          <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+            <h2 className="text-lg font-semibold mb-2 text-gray-800">Informations Client</h2>
+            <p className="text-gray-800 font-medium">{client.name}</p>
+            {client.telephone && <p className="text-gray-600">Tél: {client.telephone}</p>}
+            {client.address && <p className="text-gray-600">Adresse: {client.address}</p>}
+            {client.company && <p className="text-gray-600">Entreprise: {client.company}</p>}
           </div>
-          
-          <div className="border-t border-gray-300 pt-4 mb-6">
-            <div className="flex justify-between text-lg font-bold">
-              <span>Total:</span>
-              <span>{totalAmount.toLocaleString('fr-FR')} FCFA</span>
-            </div>
+        )}
+        
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-3 text-gray-800">Détails des produits</h2>
+          <div className="space-y-3">
+            {Object.values(productTotals).map((product, index) => (
+              <div key={index} className="flex justify-between items-center border-b border-gray-100 pb-2">
+                <div>
+                  <p className="font-medium text-gray-800">{product.productName}</p>
+                  <p className="text-sm text-gray-500">
+                    {product.quantity} x {Math.round(product.total / product.quantity).toLocaleString('fr-FR')} FCFA
+                  </p>
+                </div>
+                <p className="font-medium text-gray-800">
+                  {product.total.toLocaleString('fr-FR')} FCFA
+                </p>
+              </div>
+            ))}
           </div>
-          
-          <div className="text-center text-sm text-gray-500 mt-8">
-            <p>Merci pour votre achat!</p>
-            <p className="mt-1">-----------------------------</p>
+        </div>
+        
+        <div className="border-t border-gray-300 pt-4 mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-gray-600">Sous-total:</span>
+            <span>{totalAmount.toLocaleString('fr-FR')} FCFA</span>
           </div>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-gray-600">Remise:</span>
+            <span>0 FCFA</span>
+          </div>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-gray-600">Taxes:</span>
+            <span>0 FCFA</span>
+          </div>
+          <div className="flex justify-between text-lg font-bold mt-3 pt-3 border-t border-gray-200">
+            <span>Total à payer:</span>
+            <span className="text-primary-600">{totalAmount.toLocaleString('fr-FR')} FCFA</span>
+          </div>
+        </div>
+        
+        <div className="text-center text-sm text-gray-500 mt-8">
+          <p>Merci pour votre achat!</p>
+          <p className="mt-1">-----------------------------</p>
+          <p className="mt-2 text-xs">Service client disponible 24h/24</p>
         </div>
       </div>
     </div>

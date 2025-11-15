@@ -21,7 +21,7 @@ export const useCreateSale = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ businessId, data }: { businessId: string; data: Omit<Sale, 'id'> }) => 
+    mutationFn: ({ businessId, data }: { businessId: string; data: Omit<Sale, 'id' | 'reference' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'businessId'> }) => 
       createSale(businessId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['sales', variables.businessId] });

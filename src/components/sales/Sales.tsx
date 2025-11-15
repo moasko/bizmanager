@@ -52,6 +52,7 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
 
     // État pour gérer l'affichage des détails de la vente
     const [showSaleDetails, setShowSaleDetails] = useState(false);
+    const [selectedSaleGroup, setSelectedSaleGroup] = useState<Sale[] | null>(null);
 
     // Utiliser useMemo pour s'assurer que les données sont rechargées lorsque l'entreprise change
     const businessId = useMemo(() => business.id, [business.id]);
@@ -89,6 +90,8 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
+        setSelectedSaleGroup(null);
+        setShowSaleDetails(false);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -109,14 +112,6 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
                 clientName: client.name
             }));
         }
-    };
-
-    const handleSaleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const saleType = e.target.value as 'RETAIL' | 'WHOLESALE';
-        setFormData(prev => ({
-            ...prev,
-            saleType
-        }));
     };
 
     // Gestion des lignes de produits
@@ -239,10 +234,10 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
             // Calculer le profit (exemple simple)
             const profit = total - (item.unitPrice * 0.8 * item.quantity); // 20% de marge
             
-            const saleData: any = { 
+            // Préparer les données pour la vente (sans les champs gérés par le serveur)
+            const saleData = { 
                 date: formData.date,
-                clientId: formData.saleType === 'RETAIL' && !formData.clientId ? '' : formData.clientId,
-                clientName: formData.saleType === 'RETAIL' && !formData.clientId ? 'Client Comptoir' : formData.clientName,
+                clientId: formData.clientId || null,
                 productId: item.productId,
                 productName: item.productName,
                 quantity: item.quantity,
@@ -252,21 +247,27 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
                 total,
                 profit,
                 saleType: formData.saleType,
-                paymentStatus: 'PAID',
-                paymentMethod: 'CASH',
-                userId: undefined,
-                businessId: business.id,
-                reference: `REF-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
+                paymentStatus: 'PAID' as const,
+                paymentMethod: 'CASH' as const,
+                userId: undefined
             };
             
-            await createSaleMutation.mutateAsync({ 
-                businessId: business.id, 
-                data: saleData
-            });
+            console.log('Tentative de création de vente avec les données:', { businessId: business.id, data: saleData });
+            
+            try {
+                const result = await createSaleMutation.mutateAsync({ 
+                    businessId: business.id, 
+                    data: saleData
+                });
+                console.log('Vente créée avec succès:', result);
+            } catch (error) {
+                console.error('Erreur lors de la création de la vente:', error);
+                alert('Erreur lors de la création de la vente. Veuillez réessayer.');
+                return;
+            }
         }
         
+        // Fermer le modal et rafraîchir les données
         handleCloseModal();
     };
     
@@ -275,14 +276,14 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
         const sale = sales.find(s => s.id === saleId);
         if (!sale) return;
         
-        // Trouver le client correspondant
-        const client = clients.find(c => c.id === sale.clientId) || null;
+        // Trouver toutes les ventes du même groupe (même date et client)
+        const saleGroupKey = `${sale.date}-${sale.clientId}`;
+        const saleGroup = Object.values(groupedSales).find(group => 
+            group.some(s => `${s.date}-${s.clientId}` === saleGroupKey)
+        ) || [sale];
         
-        // Trouver le produit correspondant
-        const product = products.find(p => p.id === sale.productId) || null;
-        
-        // Afficher le reçu (dans une vraie implémentation, on afficherait une modale ou une nouvelle page)
-        console.log("Imprimer le reçu pour la vente:", sale, client, product);
+        setSelectedSaleGroup(saleGroup as Sale[]);
+        setShowSaleDetails(true);
     };
     
     // Regrouper les ventes par date et client pour créer des reçus
@@ -379,7 +380,8 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
         { 
             header: 'Type', 
             accessor: 'saleType' as keyof Sale,
-            sortable: true
+            sortable: true,
+            render: (item: Sale) => item.saleType === 'RETAIL' ? 'Détail' : 'Gros'
         },
         {
             header: 'Actions',
@@ -391,7 +393,7 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
                         onClick={() => handlePrintReceipt(item.id)}
                         icon={<Printer size={16} />}
                     >
-                        Imprimer
+                        Détails
                     </Button>
                 </div>
             )
@@ -415,7 +417,7 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-gray-800">Ventes - {business.name}</h1>
-                <Button onClick={handleOpenModal} icon={<Plus size={16} />}>Ajouter une Vente</Button>
+                <Button onClick={handleOpenModal}  icon={<Plus size={16} />}>Ajouter une Vente</Button>
             </div>
             
             {/* Filtres de date */}
@@ -428,7 +430,7 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
                             id="startDate"
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                     </div>
                     <div>
@@ -438,7 +440,7 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
                             id="endDate"
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                     </div>
                     <div className="flex items-end">
@@ -463,6 +465,22 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
                 sortConfig={sortConfig}
             />
             
+            {/* Modal pour afficher les détails de la vente */}
+            <Modal 
+                isOpen={showSaleDetails} 
+                onClose={handleCloseModal} 
+                title="Détails de la Vente"
+            >
+                {selectedSaleGroup && (
+                    <Receipt 
+                        sales={selectedSaleGroup} 
+                        client={clients.find(c => c.id === selectedSaleGroup[0].clientId) as unknown as Client || null} 
+                        products={products as unknown as Product[]} 
+                        businessName={business.name} 
+                    />
+                )}
+            </Modal>
+            
             <Modal 
                 isOpen={isModalOpen} 
                 onClose={handleCloseModal} 
@@ -478,37 +496,56 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
                                 name="date"
                                 value={formData.date}
                                 onChange={handleChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
                                 required
                             />
                         </div>
                         
                         <div>
-                            <label htmlFor="saleType" className="block text-sm font-medium text-gray-700 mb-1">Type de Vente</label>
-                            <select
-                                id="saleType"
-                                name="saleType"
-                                value={formData.saleType}
-                                onChange={handleSaleTypeChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                required
-                            >
-                                <option value="RETAIL">Vente au détail</option>
-                                <option value="WHOLESALE">Vente en gros</option>
-                            </select>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Type de Vente</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, saleType: 'RETAIL' }))}
+                                    className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                        formData.saleType === 'RETAIL'
+                                            ? 'bg-orange-600 text-white shadow-md transform scale-105'
+                                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-orange-300'
+                                    }`}
+                                >
+                                    <div className="flex flex-col items-center">
+                                        <span className="font-semibold">Détail</span>
+                                        <span className="text-xs opacity-80">Comptoir</span>
+                                    </div>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, saleType: 'WHOLESALE' }))}
+                                    className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                        formData.saleType === 'WHOLESALE'
+                                            ? 'bg-orange-600 text-white shadow-md transform scale-105'
+                                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-orange-300'
+                                    }`}
+                                >
+                                    <div className="flex flex-col items-center">
+                                        <span className="font-semibold">Gros</span>
+                                        <span className="text-xs opacity-80">Client</span>
+                                    </div>
+                                </button>
+                            </div>
                         </div>
                         
-                        {(formData.saleType === 'WHOLESALE' || formData.clientId) && (
-                            <div>
-                                <label htmlFor="clientId" className="block text-sm font-medium text-gray-700 mb-1">
-                                    {formData.saleType === 'WHOLESALE' ? 'Client *' : 'Client (optionnel)'}
-                                </label>
+                        <div>
+                            <label htmlFor="clientId" className="block text-sm font-medium text-gray-700 mb-1">
+                                {formData.saleType === 'WHOLESALE' ? 'Client *' : 'Client (optionnel)'}
+                            </label>
+                            <div className="relative">
                                 <select
                                     id="clientId"
                                     name="clientId"
                                     value={formData.clientId}
                                     onChange={handleClientChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm appearance-none"
                                     required={formData.saleType === 'WHOLESALE'}
                                 >
                                     <option value="">Sélectionner un client</option>
@@ -516,94 +553,165 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
                                         <option key={client.id} value={client.id}>{client.name}</option>
                                     ))}
                                 </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
                             </div>
-                        )}
+                        </div>
                     </div>
                     
-                    <div>
-                        <div className="flex justify-between items-center mb-2">
-                            <h3 className="text-lg font-semibold">Produits</h3>
-                            <Button type="button" onClick={addLineItem} variant="secondary" icon={<Plus size={16} />}>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800">Produits</h3>
+                            <Button 
+                                type="button" 
+                                onClick={addLineItem} 
+                                variant="secondary" 
+                                icon={<Plus size={16} />}
+                                className='bg-orange-600 flex p-2 items-center rounded-lg text-white shadow-md transform scale-105 hover:shadow-md transition-shadow'
+                            >
                                 Ajouter un produit
                             </Button>
                         </div>
                         
                         <div className="space-y-4">
-                            {formData.lineItems.map((item, index) => (
-                                <div key={item.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 border border-gray-200 rounded-lg">
-                                    <div className="md:col-span-5">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Produit</label>
-                                        <select
-                                            value={item.productId}
-                                            onChange={(e) => handleProductChange(item.id, e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                            required
-                                        >
-                                            <option value="">Sélectionner un produit</option>
-                                            {products.map((product: any) => (
-                                                <option key={product.id} value={product.id}>
-                                                    {product.name} - {product.retailPrice.toLocaleString('fr-FR')} FCFA (détail) / {product.wholesalePrice.toLocaleString('fr-FR')} FCFA (gros)
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Quantité</label>
-                                        <input
-                                            type="number"
-                                            value={item.quantity}
-                                            onChange={(e) => updateLineItem(item.id, 'quantity', parseInt(e.target.value) || 0)}
-                                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${getStockColor(item.productId, item.quantity) === 'text-red-600' ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
-                                            min="1"
-                                            required
-                                        />
-                                        {item.productId && (
-                                            <p className="mt-1 text-sm text-gray-500">
-                                                Stock disponible: {products.find(p => p.id === item.productId)?.stock || 0}
+                            {formData.lineItems.map((item, index) => {
+                                const product = item.productId ? products.find(p => p.id === item.productId) : null;
+                                return (
+                                    <div key={item.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                                        <div className="md:col-span-5">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Produit</label>
+                                            <select
+                                                value={item.productId}
+                                                onChange={(e) => handleProductChange(item.id, e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
+                                                required
+                                            >
+                                                <option value="">Sélectionner un produit</option>
+                                                {products.map((product: any) => (
+                                                    <option key={product.id} value={product.id}>
+                                                        {product.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {product && (
+                                                <div className="mt-2 text-xs text-gray-500">
+                                                    <p>
+                                                        Prix détail: <span className="font-medium">{product.retailPrice.toLocaleString('fr-FR')} FCFA</span> | 
+                                                        Prix gros: <span className="font-medium">{product.wholesalePrice.toLocaleString('fr-FR')} FCFA</span>
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Quantité</label>
+                                            <input
+                                                type="number"
+                                                value={item.quantity}
+                                                onChange={(e) => updateLineItem(item.id, 'quantity', parseInt(e.target.value) || 0)}
+                                                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm transition-colors ${
+                                                    getStockColor(item.productId, item.quantity) === 'text-red-600' 
+                                                        ? 'border-red-500 bg-red-50' 
+                                                        : getStockColor(item.productId, item.quantity) === 'text-yellow-600' 
+                                                            ? 'border-yellow-500 bg-yellow-50' 
+                                                            : 'border-gray-300'
+                                                }`}
+                                                min="1"
+                                                required
+                                            />
+                                            {product && (
+                                                <div className="mt-1">
+                                                    <p className="text-xs text-gray-500">
+                                                        Stock: <span className={`font-medium ${getStockColor(item.productId, item.quantity)}`}>
+                                                            {product.stock}
+                                                        </span>
+                                                    </p>
+                                                    {getStockColor(item.productId, item.quantity) === 'text-red-600' && (
+                                                        <p className="text-xs text-red-600 font-medium mt-1">
+                                                            Stock épuisé!
+                                                        </p>
+                                                    )}
+                                                    {getStockColor(item.productId, item.quantity) === 'text-yellow-600' && (
+                                                        <p className="text-xs text-yellow-600 font-medium mt-1">
+                                                            Stock faible
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        <div className="md:col-span-3">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Prix Unitaire (FCFA)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={item.unitPrice}
+                                                onChange={(e) => updateLineItem(item.id, 'unitPrice', parseInt(e.target.value) || 0)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
+                                                min="0"
+                                                required
+                                            />
+                                            <p className="mt-1 text-xs text-gray-500">
+                                                Total ligne: <span className="font-medium">
+                                                    {calculateLineTotal(item.quantity, item.unitPrice).toLocaleString('fr-FR')} FCFA
+                                                </span>
                                             </p>
-                                        )}
+                                        </div>
+                                        
+                                        <div className=" flex items-end">
+                                            <Button 
+                                                type="button"
+                                                variant="danger"
+                                                onClick={() => removeLineItem(item.id)}
+                                                disabled={formData.lineItems.length <= 1}
+                                                className="w-10 h-10 flex justify-center items-center bg-red-600 p-2 hover:bg-red-700 text-white font-medium rounded-md shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <Trash2 size={16} />
+                                            </Button>
+                                        </div>
                                     </div>
-                                    
-                                    <div className="md:col-span-3">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Prix Unitaire (FCFA)</label>
-                                        <input
-                                            type="number"
-                                            value={item.unitPrice}
-                                            onChange={(e) => updateLineItem(item.id, 'unitPrice', parseInt(e.target.value) || 0)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                            min="0"
-                                            required
-                                        />
-                                        <p className="mt-1 text-sm text-gray-500">
-                                            Total ligne: {calculateLineTotal(item.quantity, item.unitPrice).toLocaleString('fr-FR')} FCFA
-                                        </p>
-                                    </div>
-                                    
-                                    <div className="md:col-span-2 flex items-end">
-                                        <Button 
-                                            type="button"
-                                            variant="danger"
-                                            onClick={() => removeLineItem(item.id)}
-                                            disabled={formData.lineItems.length <= 1}
-                                            icon={<Trash2 size={16} />}
-                                        >
-                                            Supprimer
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                     
-                    <div className="border-t border-gray-200 pt-4">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-semibold">Total de la vente</h3>
-                            <p className="text-2xl font-bold text-primary-600">{calculateSaleTotal().toLocaleString('fr-FR')} FCFA</p>
-                        </div>
-                        <div className="flex justify-end space-x-3">
-                            <Button variant="secondary" onClick={handleCloseModal}>Annuler</Button>
-                            <Button type="submit">Enregistrer la Vente</Button>
+                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg border border-gray-200">
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-800">Récapitulatif</h3>
+                                <p className="text-sm text-gray-600">
+                                    {formData.lineItems.length} produit{formData.lineItems.length > 1 ? 's' : ''} dans cette vente
+                                </p>
+                            </div>
+                            
+                            <div className="flex items-center space-x-4">
+                                <div className="text-right">
+                                    <p className="text-sm text-gray-600">Total</p>
+                                    <p className="text-2xl font-bold text-orange-600">
+                                        {calculateSaleTotal().toLocaleString('fr-FR')} <span className="text-lg">FCFA</span>
+                                    </p>
+                                </div>
+                                
+                                <div className="flex space-x-3">
+                                    <Button 
+                                        variant="secondary" 
+                                        onClick={handleCloseModal}
+                                        className="px-6 py-2 hover:shadow-md transition-shadow"
+                                    >
+                                        Annuler
+                                    </Button>
+                                    <Button 
+                                        type="submit" 
+                                        className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-md shadow-md hover:shadow-lg transition-all"
+                                    >
+                                        Enregistrer la Vente
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>
