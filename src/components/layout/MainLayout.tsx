@@ -37,24 +37,26 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       }
       
       // If no saved ID or invalid, set default based on user role
-      if (!activeBusinessId) {
-        // For admins, default to first business
-        if (currentUser?.role === 'ADMIN') {
+      // For admins, default to first business
+      if (currentUser?.role === 'ADMIN') {
+        setActiveBusinessId(businesses[0].id);
+      } 
+      // For managers, default to first business they manage
+      else if (currentUser?.role === 'MANAGER' && currentUser.managedBusinessIds?.length) {
+        // Find first managed business in the businesses list
+        const firstManagedBusiness = businesses.find(b => 
+          currentUser.managedBusinessIds?.includes(b.id)
+        );
+        if (firstManagedBusiness) {
+          setActiveBusinessId(firstManagedBusiness.id);
+        } else {
+          // Fallback to first business if no managed business found
           setActiveBusinessId(businesses[0].id);
-        } 
-        // For managers, default to first business they manage
-        else if (currentUser?.role === 'MANAGER' && currentUser.managedBusinessIds?.length) {
-          // Find first managed business in the businesses list
-          const firstManagedBusiness = businesses.find(b => 
-            currentUser.managedBusinessIds?.includes(b.id)
-          );
-          if (firstManagedBusiness) {
-            setActiveBusinessId(firstManagedBusiness.id);
-          } else {
-            // Fallback to first business if no managed business found
-            setActiveBusinessId(businesses[0].id);
-          }
         }
+      }
+      // For users with no managed businesses, still set a default
+      else if (businesses.length > 0) {
+        setActiveBusinessId(businesses[0].id);
       }
     }
   }, [businesses, currentUser]); // Removed activeBusinessId from dependencies to prevent infinite loop
@@ -67,7 +69,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   }, [activeBusinessId]); // This effect should only run when activeBusinessId changes
 
   const activeBusiness = useMemo(() => {
-    if (!currentUser || businesses.length === 0 || !activeBusinessId) return null;
+    if (!currentUser || businesses.length === 0) return null;
+
+    // If activeBusinessId is not set yet, return null temporarily
+    if (!activeBusinessId) return null;
 
     const currentActiveBusiness = businesses.find(b => b.id === activeBusinessId);
     

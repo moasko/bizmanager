@@ -57,12 +57,12 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, businesses, activeB
         <header className="flex items-center justify-between h-20 px-6 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
             <div>
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-                    {activeBusiness ? activeBusiness.name : 'Aucune entreprise sélectionnée'}
+                    {activeBusiness ? activeBusiness.name : (businesses.length > 0 ? 'Sélectionnez une entreprise' : 'Aucune entreprise disponible')}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                     {currentUser.role === 'ADMIN' 
                         ? `${totalBusinesses} entreprise(s) gérée(s)` 
-                        : (activeBusiness ? activeBusiness.type : 'Aucune entreprise')}
+                        : (activeBusiness ? activeBusiness.type : (businesses.length > 0 ? 'Aucune entreprise sélectionnée' : 'Aucune entreprise disponible'))}
                 </p>
             </div>
 
