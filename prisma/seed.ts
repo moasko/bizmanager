@@ -11,7 +11,9 @@ async function main() {
       email: 'foundanen.tuo@devsongue.com',
       password: 'Devsongue61996@@', // Mot de passe en clair comme demandé
       role: 'ADMIN',
+      status: 'ACTIVE',
       avatarUrl: 'https://i.pravatar.cc/150?u=admin',
+      lastLogin: new Date(),
     },
   });
 
@@ -23,7 +25,9 @@ async function main() {
       email: 'said@devsongue.com',
       password: 'S@ide25', // Mot de passe en clair comme demandé
       role: 'MANAGER',
+      status: 'ACTIVE',
       avatarUrl: 'https://i.pravatar.cc/150?u=said',
+      lastLogin: new Date(),
     },
   });
 
@@ -34,7 +38,9 @@ async function main() {
       email: 'mariam@devsongue.com',
       password: 'M@ariam25', // Mot de passe en clair comme demandé
       role: 'MANAGER',
+      status: 'ACTIVE',
       avatarUrl: 'https://i.pravatar.cc/150?u=mariam',
+      lastLogin: new Date(),
     },
   });
 
@@ -45,7 +51,9 @@ async function main() {
       email: 'lucrece@devsongue.com',
       password: 'Lucrece@25', // Mot de passe en clair comme demandé
       role: 'MANAGER',
+      status: 'ACTIVE',
       avatarUrl: 'https://i.pravatar.cc/150?u=lucrece',
+      lastLogin: new Date(),
     },
   });
 
@@ -55,6 +63,10 @@ async function main() {
       id: 'biz-devsongue',
       name: 'DEV SONGUE',
       type: 'SHOP',
+      country: 'Côte d\'Ivoire',
+      city: 'Abidjan',
+      currency: 'XOF',
+      logoUrl: 'https://example.com/logo-devsongue.png',
     },
   });
 
@@ -63,6 +75,10 @@ async function main() {
       id: 'biz-devsonguegaz',
       name: 'DEV SONGUE GAZ',
       type: 'SHOP',
+      country: 'Côte d\'Ivoire',
+      city: 'Abidjan',
+      currency: 'XOF',
+      logoUrl: 'https://example.com/logo-devsonguegaz.png',
     },
   });
 
@@ -104,8 +120,11 @@ async function main() {
       name: 'Riz 5kg',
       category: 'Alimentation',
       stock: 100,
+      minStock: 20,
+      costPrice: 2000,
       retailPrice: 2500,
       wholesalePrice: 2300,
+      purchasePrice: 2100,
       businessId: devSongue.id,
     },
   });
@@ -116,8 +135,11 @@ async function main() {
       name: 'Huile de palme 1L',
       category: 'Alimentation',
       stock: 50,
+      minStock: 10,
+      costPrice: 900,
       retailPrice: 1200,
       wholesalePrice: 1100,
+      purchasePrice: 1000,
       businessId: devSongue.id,
     },
   });
@@ -129,8 +151,11 @@ async function main() {
       name: 'Gaz 12kg',
       category: 'Énergie',
       stock: 30,
+      minStock: 5,
+      costPrice: 7000,
       retailPrice: 8000,
       wholesalePrice: 7500,
+      purchasePrice: 7200,
       businessId: devSongueGaz.id,
     },
   });
@@ -141,8 +166,11 @@ async function main() {
       name: 'Gaz 6kg',
       category: 'Énergie',
       stock: 50,
+      minStock: 10,
+      costPrice: 4000,
       retailPrice: 4500,
       wholesalePrice: 4200,
+      purchasePrice: 4100,
       businessId: devSongueGaz.id,
     },
   });
@@ -157,6 +185,10 @@ async function main() {
       email: 'koffi.jean@email.ci',
       address: 'Abidjan, Marcory',
       balance: -5000,
+      company: 'Koffi Jean Entreprise',
+      notes: 'Client régulier',
+      loyaltyPoints: 150,
+      lastPurchaseDate: new Date('2023-10-26'),
       businessId: devSongue.id,
     },
   });
@@ -170,6 +202,10 @@ async function main() {
       email: 'awa.bamba@email.ci',
       address: 'Abidjan, Koumassi',
       balance: 2000,
+      company: 'Awa Bamba SARL',
+      notes: 'Client premium',
+      loyaltyPoints: 320,
+      lastPurchaseDate: new Date('2023-10-25'),
       businessId: devSongue.id,
     },
   });
@@ -184,6 +220,10 @@ async function main() {
       email: 'yao.kouassi@email.ci',
       address: 'Abidjan, Anyama',
       balance: -12000,
+      company: 'Yao Kouassi GAZ',
+      notes: 'Client professionnel',
+      loyaltyPoints: 80,
+      lastPurchaseDate: new Date('2023-10-22'),
       businessId: devSongueGaz.id,
     },
   });
@@ -195,8 +235,13 @@ async function main() {
       name: 'Grossiste Marcory',
       product: 'Produits alimentaires',
       contacts: '01 20 30 40', // Format ivoirien
+      email: 'contact@grossistemarcory.ci',
+      telephone: '01 20 30 40',
+      address: 'Abidjan, Marcory',
       description: 'Fournisseur de produits alimentaires locaux',
       productTypes: 'Riz, huile, épicerie',
+      rating: 4,
+      notes: 'Livraison rapide',
       businessId: devSongue.id,
     },
   });
@@ -208,8 +253,13 @@ async function main() {
       name: 'Fournisseur de Gaz Abidjan',
       product: 'Gaz domestique',
       contacts: '02 21 31 41', // Format ivoirien
+      email: 'info@gazabidjan.ci',
+      telephone: '02 21 31 41',
+      address: 'Abidjan, Plateau',
       description: 'Distributeur de gaz pour usage domestique',
       productTypes: 'Gaz 6kg, Gaz 12kg',
+      rating: 5,
+      notes: 'Service après-vente excellent',
       businessId: devSongueGaz.id,
     },
   });
@@ -225,6 +275,8 @@ async function main() {
       productName: rice.name,
       quantity: 2,
       unitPrice: 2500,
+      discount: 0,
+      tax: 0,
       total: 5000,
       profit: 400,
       saleType: 'RETAIL',
@@ -244,6 +296,8 @@ async function main() {
       productName: oil.name,
       quantity: 3,
       unitPrice: 1200,
+      discount: 0,
+      tax: 0,
       total: 3600,
       profit: 300,
       saleType: 'WHOLESALE',
@@ -264,6 +318,8 @@ async function main() {
       productName: gas12kg.name,
       quantity: 1,
       unitPrice: 8000,
+      discount: 0,
+      tax: 0,
       total: 8000,
       profit: 500,
       saleType: 'RETAIL',
@@ -296,6 +352,7 @@ async function main() {
       description: 'Facture CIE',
       amount: 15000,
       paymentMethod: 'CASH',
+      receiptUrl: 'https://example.com/receipt1.pdf',
       businessId: devSongue.id,
     },
   });
@@ -310,6 +367,7 @@ async function main() {
       description: 'Loyer dépôt',
       amount: 150000,
       paymentMethod: 'CASH',
+      receiptUrl: 'https://example.com/receipt2.pdf',
       businessId: devSongueGaz.id,
     },
   });
