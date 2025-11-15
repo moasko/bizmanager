@@ -23,7 +23,7 @@ const processMonthlyData = (sales: Sale[], expenses: Expense[]) => {
             if (!data[key]) {
                 data[key] = { name: `${monthNames[month]} '${String(year).slice(2)}`, ventes: 0, depenses: 0 };
             }
-            data[key][type] += amount;
+            data[key][type] += amount || 0; // Ajout de la vérification pour éviter NaN
         });
     };
 
@@ -99,8 +99,8 @@ const BestSellingProductsCard: React.FC<{ products: { productId: string; product
                 <li key={p.productId} className="flex justify-between items-center text-sm border-t pt-3 px-2">
                     <p className="font-semibold text-gray-700 truncate pr-2" title={p.productName}>{p.productName}</p>
                     <div className="flex space-x-4 font-mono flex-shrink-0">
-                        <span className="w-16 text-right">{p.totalQuantity}</span>
-                        <span className="w-24 text-right font-bold text-primary-600">{p.totalRevenue.toLocaleString('fr-FR')}</span>
+                        <span className="w-16 text-right">{(p.totalQuantity || 0).toLocaleString('fr-FR')}</span>
+                        <span className="w-24 text-right font-bold text-primary-600">{(p.totalRevenue || 0).toLocaleString('fr-FR')}</span>
                     </div>
                 </li>
             )) : <p className="text-gray-500 text-center py-4">Aucune vente pour la période sélectionnée.</p>}
@@ -117,14 +117,14 @@ const InventoryValuationCard: React.FC<{ valuation: { totalRetailValue: number; 
                     <p className="font-semibold text-orange-800">Valeur au Prix de Détail</p>
                     <p className="text-xs text-orange-600">Potentiel de revenu</p>
                 </div>
-                <p className="text-2xl font-bold text-orange-600">{valuation.totalRetailValue.toLocaleString('fr-FR')} FCFA</p>
+                <p className="text-2xl font-bold text-orange-600">{(valuation.totalRetailValue || 0).toLocaleString('fr-FR')} FCFA</p>
             </div>
             <div className="flex justify-between items-center p-4 bg-purple-50 rounded-lg">
                  <div>
                     <p className="font-semibold text-purple-800">Valeur au Prix de Gros</p>
                     <p className="text-xs text-purple-600">Coût de l'inventaire</p>
                 </div>
-                <p className="text-2xl font-bold text-purple-600">{valuation.totalWholesaleValue.toLocaleString('fr-FR')} FCFA</p>
+                <p className="text-2xl font-bold text-purple-600">{(valuation.totalWholesaleValue || 0).toLocaleString('fr-FR')} FCFA</p>
             </div>
         </div>
     </div>
@@ -136,9 +136,9 @@ const CustomProfitTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-sm">
         <p className="font-bold text-gray-800">{label}</p>
-        <p className="text-sm text-green-600">{`Profit: ${data.totalProfit.toLocaleString('fr-FR')} FCFA`}</p>
-        <p className="text-sm text-gray-600">{`Quantité Vendue: ${data.totalQuantity}`}</p>
-        <p className="text-sm text-purple-600">{`Prix de Gros: ${data.wholesalePrice.toLocaleString('fr-FR')} FCFA`}</p>
+        <p className="text-sm text-green-600">{`Profit: ${(data.totalProfit || 0).toLocaleString('fr-FR')} FCFA`}</p>
+        <p className="text-sm text-gray-600">{`Quantité Vendue: ${data.totalQuantity || 0}`}</p>
+        <p className="text-sm text-purple-600">{`Prix de Gros: ${(data.wholesalePrice || 0).toLocaleString('fr-FR')} FCFA`}</p>
       </div>
     );
   }
@@ -250,7 +250,7 @@ export const Reports: React.FC<ReportsProps> = ({ business, hideFilters = false 
             }
             
             monthlySales[monthKey].totalSales += 1;
-            monthlySales[monthKey].totalRevenue += sale.total;
+            monthlySales[monthKey].totalRevenue += sale.total || 0;
         });
         
         return Object.values(monthlySales);
@@ -259,14 +259,15 @@ export const Reports: React.FC<ReportsProps> = ({ business, hideFilters = false 
     const expenseByCategory = useMemo(() => {
         const categoryMap: { [key: string]: number } = {};
         filteredData.expenses.forEach(expense => {
-            categoryMap[expense.category] = (categoryMap[expense.category] || 0) + expense.amount;
+            const category = expense.category || 'Non catégorisé';
+            categoryMap[category] = (categoryMap[category] || 0) + (expense.amount || 0);
         });
         return Object.entries(categoryMap).map(([name, value]) => ({ name, value }));
     }, [filteredData.expenses]);
     
     const inventoryValuation = useMemo(() => {
-        const totalRetailValue = businessData.products.reduce((sum, p) => sum + (p.stock * p.retailPrice), 0);
-        const totalWholesaleValue = businessData.products.reduce((sum, p) => sum + (p.stock * p.wholesalePrice), 0);
+        const totalRetailValue = businessData.products.reduce((sum, p) => sum + ((p.stock || 0) * (p.retailPrice || 0)), 0);
+        const totalWholesaleValue = businessData.products.reduce((sum, p) => sum + ((p.stock || 0) * (p.wholesalePrice || 0)), 0);
         return { totalRetailValue, totalWholesaleValue };
     }, [businessData.products]);
 
@@ -280,19 +281,19 @@ export const Reports: React.FC<ReportsProps> = ({ business, hideFilters = false 
                 if (!productSales[productId]) {
                     productSales[productId] = {
                         productId: productId,
-                        productName: sale.productName,
+                        productName: sale.productName || 'Produit inconnu',
                         totalQuantity: 0,
                         totalRevenue: 0,
                     };
                 }
-                productSales[productId].totalQuantity += sale.quantity;
-                productSales[productId].totalRevenue += sale.total;
+                productSales[productId].totalQuantity += sale.quantity || 0;
+                productSales[productId].totalRevenue += sale.total || 0;
             }
         });
 
         // Convert to array and sort by totalRevenue
         return Object.values(productSales)
-            .sort((a, b) => b.totalRevenue - a.totalRevenue)
+            .sort((a, b) => (b.totalRevenue || 0) - (a.totalRevenue || 0))
             .slice(0, 10); // Top 10 products
     }, [filteredData.sales]);
 
@@ -312,21 +313,21 @@ export const Reports: React.FC<ReportsProps> = ({ business, hideFilters = false 
                     productCosts[productId] = product ? product.wholesalePrice : 0;
                 }
                 
-                const cost = productCosts[productId] * sale.quantity;
-                const revenue = sale.total;
+                const cost = (productCosts[productId] || 0) * (sale.quantity || 0);
+                const revenue = sale.total || 0;
                 const profit = revenue - cost;
                 
                 if (!profitMap[productId]) {
                     profitMap[productId] = {
-                        productName: sale.productName,
+                        productName: sale.productName || 'Produit inconnu',
                         totalProfit: 0,
                         totalQuantity: 0,
-                        wholesalePrice: productCosts[productId]
+                        wholesalePrice: productCosts[productId] || 0
                     };
                 }
                 
                 profitMap[productId].totalProfit += profit;
-                profitMap[productId].totalQuantity += sale.quantity;
+                profitMap[productId].totalQuantity += sale.quantity || 0;
             }
         });
 
@@ -334,24 +335,24 @@ export const Reports: React.FC<ReportsProps> = ({ business, hideFilters = false 
         let result = Object.values(profitMap);
         
         if (profitSortKey === 'totalProfit') {
-            result = result.sort((a, b) => b.totalProfit - a.totalProfit);
+            result = result.sort((a, b) => (b.totalProfit || 0) - (a.totalProfit || 0));
         } else {
-            result = result.sort((a, b) => b.totalQuantity - a.totalQuantity);
+            result = result.sort((a, b) => (b.totalQuantity || 0) - (a.totalQuantity || 0));
         }
         
         return result.slice(0, 15); // Top 15 products
     }, [filteredData.sales, businessData.products, profitSortKey]);
 
     const totalRevenue = useMemo(() => {
-        return filteredData.sales.reduce((sum, sale) => sum + sale.total, 0);
+        return filteredData.sales.reduce((sum, sale) => sum + (sale.total || 0), 0);
     }, [filteredData.sales]);
 
     const totalExpenses = useMemo(() => {
-        return filteredData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+        return filteredData.expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
     }, [filteredData.expenses]);
 
     const totalProfit = useMemo(() => {
-        return totalRevenue - totalExpenses;
+        return (totalRevenue || 0) - (totalExpenses || 0);
     }, [totalRevenue, totalExpenses]);
 
     const handleDateRangeChange = (start: string, end: string) => {
@@ -401,15 +402,15 @@ export const Reports: React.FC<ReportsProps> = ({ business, hideFilters = false 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
                     <h3 className="text-lg font-semibold mb-2">Revenu Total</h3>
-                    <p className="text-3xl font-bold">{totalRevenue.toLocaleString('fr-FR')} FCFA</p>
+                    <p className="text-3xl font-bold">{(totalRevenue || 0).toLocaleString('fr-FR')} FCFA</p>
                 </div>
                 <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl shadow-lg p-6 text-white">
                     <h3 className="text-lg font-semibold mb-2">Dépenses Totales</h3>
-                    <p className="text-3xl font-bold">{totalExpenses.toLocaleString('fr-FR')} FCFA</p>
+                    <p className="text-3xl font-bold">{(totalExpenses || 0).toLocaleString('fr-FR')} FCFA</p>
                 </div>
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
+                <div className={`bg-gradient-to-r ${totalProfit >= 0 ? 'from-orange-500 to-orange-600' : 'from-gray-500 to-gray-600'} rounded-xl shadow-lg p-6 text-white`}>
                     <h3 className="text-lg font-semibold mb-2">Profit Net</h3>
-                    <p className="text-3xl font-bold">{totalProfit.toLocaleString('fr-FR')} FCFA</p>
+                    <p className="text-3xl font-bold">{(totalProfit || 0).toLocaleString('fr-FR')} FCFA</p>
                 </div>
             </div>
 
@@ -418,24 +419,30 @@ export const Reports: React.FC<ReportsProps> = ({ business, hideFilters = false 
                 {/* Graphique mensuel */}
                 <div className="bg-white p-6 rounded-xl shadow-lg">
                     <h3 className="text-xl font-bold text-gray-800 mb-4">Performance Mensuelle</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={monthlyChartData}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                            <XAxis dataKey="name" tick={{ fill: '#6B7280', fontSize: 12 }} />
-                            <YAxis tick={{ fill: '#6B7280', fontSize: 12 }} tickFormatter={(value) => new Intl.NumberFormat('fr-FR').format(value as number)} />
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: '#ffffff',
-                                    border: '1px solid #e5e7eb',
-                                    borderRadius: '0.5rem',
-                                }}
-                                formatter={(value) => `${(value as number).toLocaleString('fr-FR')} FCFA`}
-                            />
-                            <Legend />
-                            <Bar dataKey="ventes" fill="#3b82f6" name="Ventes" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="depenses" fill="#ef4444" name="Dépenses" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
+                    {monthlyChartData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={monthlyChartData}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="name" tick={{ fill: '#6B7280', fontSize: 12 }} />
+                                <YAxis tick={{ fill: '#6B7280', fontSize: 12 }} tickFormatter={(value) => new Intl.NumberFormat('fr-FR').format(value as number)} />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: '#ffffff',
+                                        border: '1px solid #e5e7eb',
+                                        borderRadius: '0.5rem',
+                                    }}
+                                    formatter={(value) => `${(value as number).toLocaleString('fr-FR')} FCFA`}
+                                />
+                                <Legend />
+                                <Bar dataKey="ventes" fill="#3b82f6" name="Ventes" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="depenses" fill="#ef4444" name="Dépenses" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="flex items-center justify-center h-64">
+                            <p className="text-gray-500">Aucune donnée à afficher pour la période sélectionnée.</p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Répartition des dépenses par catégorie */}
