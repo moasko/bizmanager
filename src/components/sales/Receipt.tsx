@@ -28,15 +28,18 @@ export const Receipt: React.FC<ReceiptProps> = ({ sales, client, products, busin
   const productTotals: Record<string, { quantity: number; total: number; productName: string }> = {};
   
   sales.forEach(sale => {
-    if (productTotals[sale.productId]) {
-      productTotals[sale.productId].quantity += sale.quantity;
-      productTotals[sale.productId].total += sale.total;
-    } else {
-      productTotals[sale.productId] = {
-        quantity: sale.quantity,
-        total: sale.total,
-        productName: sale.productName
-      };
+    // Vérifier que sale.productId n'est pas null
+    if (sale.productId !== null && sale.productId !== undefined) {
+      if (productTotals[sale.productId]) {
+        productTotals[sale.productId].quantity += sale.quantity;
+        productTotals[sale.productId].total += sale.total;
+      } else {
+        productTotals[sale.productId] = {
+          quantity: sale.quantity,
+          total: sale.total,
+          productName: sale.productName
+        };
+      }
     }
   });
 
