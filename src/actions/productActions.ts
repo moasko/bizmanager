@@ -30,6 +30,7 @@ export async function createProduct(businessId: string, productData: Omit<Produc
       costPrice: productData.costPrice || 0,
       retailPrice: productData.retailPrice,
       wholesalePrice: productData.wholesalePrice,
+      purchasePrice: productData.purchasePrice || 0,
       businessId: businessId,
     };
     
@@ -75,6 +76,7 @@ export async function updateProduct(id: string, productData: Partial<Omit<Produc
     if (productData.costPrice !== undefined) updateData.costPrice = productData.costPrice;
     if (productData.retailPrice !== undefined) updateData.retailPrice = productData.retailPrice;
     if (productData.wholesalePrice !== undefined) updateData.wholesalePrice = productData.wholesalePrice;
+    if (productData.purchasePrice !== undefined) updateData.purchasePrice = productData.purchasePrice;
     if (productData.sku !== undefined) updateData.sku = productData.sku;
     if (productData.barcode !== undefined) updateData.barcode = productData.barcode;
     if (productData.supplierId !== undefined) updateData.supplierId = productData.supplierId;

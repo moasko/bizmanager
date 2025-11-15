@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -162,25 +162,26 @@ model Product {
   barcode        String?      @unique
   stock          Int          @default(0)
   minStock       Int          @default(0)
-
+  
   costPrice      Int          @default(0)
   retailPrice    Int          @default(0)
   wholesalePrice Int          @default(0)
-
+  purchasePrice  Int          @default(0)
+  
   images         Json?        // tableau d'images
-
+  
   supplierId     String?
   supplier       Supplier?    @relation(fields: [supplierId], references: [id], onDelete: SetNull)
-
+  
   businessId     String
   business       Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
-
+  
   sales          Sale[]
-
+  
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   deletedAt      DateTime?
-
+  
   @@index([businessId])
   @@index([category])
 }

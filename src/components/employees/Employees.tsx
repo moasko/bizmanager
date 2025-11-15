@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import type { User, Business, UserRole } from '@/types';
 import { Button } from '../shared/Button';
 import { Modal } from '../shared/Modal';
-import { Table } from '../shared/Table';
+import { Table, Column } from '../shared/Table';
 import { useUsers, useCreateUser, useUpdateUser } from '@/hooks/useUser';
 import { Pen, PenBox, TrashIcon } from 'lucide-react';
 
@@ -114,12 +114,12 @@ export const Employees: React.FC<EmployeesProps> = ({ users, allBusinesses }) =>
         handleCloseModal();
     };
 
-    const columns = [
-        { header: 'Nom', accessor: 'name' as keyof User },
-        { header: 'Email', accessor: 'email' as keyof User },
+    const columns: Column<User>[] = [
+        { header: 'Nom', accessor: 'name' },
+        { header: 'Email', accessor: 'email' },
         { 
             header: 'Entreprises Gérées', 
-            accessor: 'managedBusinessIds' as keyof User,
+            accessor: 'managedBusinessIds',
             render: (item: User) => {
                 if (item.role === 'ADMIN') {
                     return <span className="text-gray-500">Toutes les entreprises</span>;
@@ -132,12 +132,12 @@ export const Employees: React.FC<EmployeesProps> = ({ users, allBusinesses }) =>
       
         { 
             header: 'Rôle', 
-            accessor: 'role' as keyof User,
+            accessor: 'role',
             render: (item: User) => {
                 return item.role === 'ADMIN' ? 'Administrateur' : 'Gérant';
             }
         },
-          {
+        {
             header: 'Actions',
             accessor: 'id',
             render: (item: User) => (

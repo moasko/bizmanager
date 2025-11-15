@@ -57,6 +57,7 @@ export interface Product {
   costPrice: number;
   retailPrice: number;
   wholesalePrice: number;
+  purchasePrice: number;
   images?: any | null;
   supplierId?: string | null;
   businessId: string;

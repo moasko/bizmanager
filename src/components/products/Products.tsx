@@ -28,6 +28,7 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
         costPrice: 0,
         retailPrice: 0, 
         wholesalePrice: 0,
+        purchasePrice: 0,
         supplierId: undefined,
     });
     const [restockData, setRestockData] = useState({ 
@@ -58,6 +59,7 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
                 costPrice: product.costPrice || 0,
                 retailPrice: product.retailPrice,
                 wholesalePrice: product.wholesalePrice,
+                purchasePrice: product.purchasePrice || 0,
                 supplierId: product.supplierId ?? undefined,
             });
         } else {
@@ -70,6 +72,7 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
                 costPrice: 0,
                 retailPrice: 0, 
                 wholesalePrice: 0,
+                purchasePrice: 0,
                 supplierId: undefined,
             });
         }
@@ -104,7 +107,7 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: name === 'stock' || name === 'minStock' || name === 'costPrice' || name === 'retailPrice' || name === 'wholesalePrice' ? Number(value) : value
+            [name]: name === 'stock' || name === 'minStock' || name === 'costPrice' || name === 'retailPrice' || name === 'wholesalePrice' || name === 'purchasePrice' ? Number(value) : value
         }));
     };
 

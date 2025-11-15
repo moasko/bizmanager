@@ -23,7 +23,7 @@ export const useCreateProduct = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ businessId, data }: { businessId: string; data: Omit<Product, 'id'> }) => 
+    mutationFn: ({ businessId, data }: { businessId: string; data: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'> }) => 
       createProduct(businessId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['products', variables.businessId] });
@@ -36,7 +36,7 @@ export const useUpdateProduct = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Product> }) => 
+    mutationFn: ({ id, data }: { id: string; data: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>> }) => 
       updateProduct(id, data),
     onSuccess: (_, variables) => {
       // We don't know which business this product belongs to, so we invalidate all product queries
