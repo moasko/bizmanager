@@ -118,8 +118,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   };
 
   // Si l'utilisateur n'est pas connecté, le rediriger vers la page de login
+  useEffect(() => {
+    if (!currentUser) {
+      router.push('/login');
+    }
+  }, [currentUser, router]);
+
   if (!currentUser) {
-    router.push('/login');
     return null; // Retourne null pendant la redirection
   }
 

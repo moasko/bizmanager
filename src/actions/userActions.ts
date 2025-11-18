@@ -88,7 +88,7 @@ export async function createUser(userData: Omit<User, 'id' | 'createdAt' | 'upda
 }
 
 // Update a user
-export async function updateUser(id: string, userData: Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'managedBusinessIds'>>): Promise<ActionResult<User>> {
+export async function updateUser(id: string, userData: Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>>): Promise<ActionResult<User>> {
   try {
     // Préparer les données pour la mise à jour
     const userDataForPrisma: any = {};
@@ -119,9 +119,37 @@ export async function updateUser(id: string, userData: Partial<Omit<User, 'id' |
       userDataForPrisma.permissions = userData.permissions;
     }
     
+    // Gérer la mise à jour des managedBusinessIds
+    let managedBusinessesConnectDisconnect = undefined;
+    if (userData.managedBusinessIds !== undefined) {
+      // Récupérer les entreprises actuellement gérées par l'utilisateur
+      const currentUser = await prisma.user.findUnique({
+        where: { id },
+        include: { managedBusinesses: true }
+      });
+      
+      const currentBusinessIds = currentUser?.managedBusinesses?.map(b => b.id) || [];
+      const newBusinessIds = userData.managedBusinessIds || [];
+      
+      // Calculer les différences pour connecter/déconnecter
+      const toConnect = newBusinessIds.filter(id => !currentBusinessIds.includes(id));
+      const toDisconnect = currentBusinessIds.filter(id => !newBusinessIds.includes(id));
+      
+      managedBusinessesConnectDisconnect = {
+        connect: toConnect.map(id => ({ id })),
+        disconnect: toDisconnect.map(id => ({ id }))
+      };
+    }
+    
     const user = await prisma.user.update({
       where: { id },
-      data: userDataForPrisma,
+      data: {
+        ...userDataForPrisma,
+        ...(managedBusinessesConnectDisconnect && { managedBusinesses: managedBusinessesConnectDisconnect })
+      },
+      include: {
+        managedBusinesses: true
+      }
     });
     
     // Map to our User interface
@@ -131,7 +159,7 @@ export async function updateUser(id: string, userData: Partial<Omit<User, 'id' |
       email: user.email,
       password: user.password ?? undefined,
       role: user.role as UserRole,
-      managedBusinessIds: [],
+      managedBusinessIds: user.managedBusinesses?.map((business: any) => business.id) || [],
       createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : user.createdAt,
       updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : user.updatedAt,
     };
