@@ -169,6 +169,11 @@ export async function createBusiness(businessData: Omit<Business, 'id' | 'sales'
         id: `biz-${Date.now()}`,
         name: businessData.name,
         type: businessData.type,
+        country: businessData.country,
+        city: businessData.city,
+        currency: businessData.currency,
+        logoUrl: businessData.logoUrl,
+        settings: businessData.settings,
       },
     });
     
@@ -184,7 +189,15 @@ export async function updateBusiness(id: string, businessData: Partial<Omit<Busi
   try {
     const business = await prisma.business.update({
       where: { id },
-      data: businessData,
+      data: {
+        name: businessData.name,
+        type: businessData.type,
+        country: businessData.country,
+        city: businessData.city,
+        currency: businessData.currency,
+        logoUrl: businessData.logoUrl,
+        settings: businessData.settings,
+      },
     });
     
     return { success: true, data: business };

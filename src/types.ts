@@ -6,6 +6,10 @@ export type UserRole = 'ADMIN' | 'MANAGER' | 'STAFF';
 export type UserStatus = 'ACTIVE' | 'DISABLED';
 export type BusinessType = 'SHOP' | 'RESTAURANT' | 'PHARMACY' | 'SERVICE' | 'OTHER';
 
+// Nouveaux types pour les notifications
+export type NotificationType = 'LOW_STOCK' | 'SALES_TARGET' | 'EXPENSE_ALERT' | 'NEW_SALE' | 'NEW_EXPENSE';
+export type NotificationPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+
 export interface Sale {
   id: string;
   reference: string;
@@ -135,6 +139,26 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
+}
+
+export interface AuditLog {
+  id: string;
+  userId?: string | null;
+  action: string;
+  details?: any | null;
+  createdAt: string;
+}
+
+export interface Notification {
+  id: string;
+  businessId: string;
+  type: NotificationType;
+  priority: NotificationPriority;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  relatedEntityId?: string | null;
 }
 
 // Session token payload

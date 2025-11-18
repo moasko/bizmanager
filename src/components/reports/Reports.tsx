@@ -98,10 +98,10 @@ const renderActiveShape = (props: any) => {
 };
 
 const BestSellingProductsCard: React.FC<{ products: { productId: string; productName: string; totalQuantity: number; totalRevenue: number; }[] }> = ({ products }) => (
-    <div className="bg-white p-6 rounded-xl shadow-lg">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Produits les Plus Rentables</h3>
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Produits les Plus Rentables</h3>
         <ul className="space-y-3">
-            <li className="flex justify-between text-xs font-bold text-gray-500 uppercase px-2">
+            <li className="flex justify-between text-xs font-bold text-gray-500 dark:text-gray-400 uppercase px-2">
                 <span>Produit</span>
                 <div className="flex space-x-4">
                     <span className="w-16 text-right">Quantité</span>
@@ -109,35 +109,35 @@ const BestSellingProductsCard: React.FC<{ products: { productId: string; product
                 </div>
             </li>
             {products.length > 0 ? products.map((p: any) => (
-                <li key={p.productId} className="flex justify-between items-center text-sm border-t pt-3 px-2">
-                    <p className="font-semibold text-gray-700 truncate pr-2" title={p.productName}>{p.productName}</p>
+                <li key={p.productId} className="flex justify-between items-center text-sm border-t border-gray-200 dark:border-gray-700 pt-3 px-2">
+                    <p className="font-semibold text-gray-700 dark:text-gray-300 truncate pr-2" title={p.productName}>{p.productName}</p>
                     <div className="flex space-x-4 font-mono flex-shrink-0">
-                        <span className="w-16 text-right">{(p.totalQuantity || 0).toLocaleString('fr-FR')}</span>
-                        <span className="w-24 text-right font-bold text-primary-600">{(p.totalRevenue || 0).toLocaleString('fr-FR')}</span>
+                        <span className="w-16 text-right text-gray-700 dark:text-gray-300">{(p.totalQuantity || 0).toLocaleString('fr-FR')}</span>
+                        <span className="w-24 text-right font-bold text-primary-600 dark:text-primary-400">{(p.totalRevenue || 0).toLocaleString('fr-FR')}</span>
                     </div>
                 </li>
-            )) : <p className="text-gray-500 text-center py-4">Aucune vente pour la période sélectionnée.</p>}
+            )) : <p className="text-gray-500 dark:text-gray-400 text-center py-4">Aucune vente pour la période sélectionnée.</p>}
         </ul>
     </div>
 );
 
 const InventoryValuationCard: React.FC<{ valuation: { totalRetailValue: number; totalWholesaleValue: number; } }> = ({ valuation }) => (
-    <div className="bg-white p-6 rounded-xl shadow-lg">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Valorisation des Stocks</h3>
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Valorisation des Stocks</h3>
         <div className="space-y-4 mt-8">
-            <div className="flex justify-between items-center p-4 bg-orange-50 rounded-lg">
+            <div className="flex justify-between items-center p-4 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
                 <div>
-                    <p className="font-semibold text-orange-800">Valeur au Prix de Détail</p>
-                    <p className="text-xs text-orange-600">Potentiel de revenu</p>
+                    <p className="font-semibold text-orange-800 dark:text-orange-200">Valeur au Prix de Détail</p>
+                    <p className="text-xs text-orange-600 dark:text-orange-400">Potentiel de revenu</p>
                 </div>
-                <p className="text-2xl font-bold text-orange-600">{(valuation.totalRetailValue || 0).toLocaleString('fr-FR')} FCFA</p>
+                <p className="text-2xl font-bold text-orange-600 dark:text-orange-300">{(valuation.totalRetailValue || 0).toLocaleString('fr-FR')} FCFA</p>
             </div>
-            <div className="flex justify-between items-center p-4 bg-purple-50 rounded-lg">
+            <div className="flex justify-between items-center p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
                  <div>
-                    <p className="font-semibold text-purple-800">Valeur au Prix de Gros</p>
-                    <p className="text-xs text-purple-600">Coût de l'inventaire</p>
+                    <p className="font-semibold text-purple-800 dark:text-purple-200">Valeur au Prix de Gros</p>
+                    <p className="text-xs text-purple-600 dark:text-purple-400">Coût de l'inventaire</p>
                 </div>
-                <p className="text-2xl font-bold text-purple-600">{(valuation.totalWholesaleValue || 0).toLocaleString('fr-FR')} FCFA</p>
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-300">{(valuation.totalWholesaleValue || 0).toLocaleString('fr-FR')} FCFA</p>
             </div>
         </div>
     </div>
@@ -147,11 +147,11 @@ const CustomProfitTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-sm">
-        <p className="font-bold text-gray-800">{label}</p>
-        <p className="text-sm text-green-600">{`Profit: ${(data.totalProfit || 0).toLocaleString('fr-FR')} FCFA`}</p>
-        <p className="text-sm text-gray-600">{`Quantité Vendue: ${data.totalQuantity || 0}`}</p>
-        <p className="text-sm text-purple-600">{`Prix de Gros: ${(data.wholesalePrice || 0).toLocaleString('fr-FR')} FCFA`}</p>
+      <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+        <p className="font-bold text-gray-800 dark:text-white">{label}</p>
+        <p className="text-sm text-green-600 dark:text-green-400">{`Profit: ${(data.totalProfit || 0).toLocaleString('fr-FR')} FCFA`}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300">{`Quantité Vendue: ${data.totalQuantity || 0}`}</p>
+        <p className="text-sm text-purple-600 dark:text-purple-400">{`Prix de Gros: ${(data.wholesalePrice || 0).toLocaleString('fr-FR')} FCFA`}</p>
       </div>
     );
   }
@@ -163,19 +163,19 @@ const ProductProfitChart: React.FC<{
     sortKey: 'totalProfit' | 'totalQuantity',
     setSortKey: (key: 'totalProfit' | 'totalQuantity') => void
 }> = ({ data, sortKey, setSortKey }) => (
-    <div className="bg-white p-6 rounded-xl shadow-lg">
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
         <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-gray-800">Analyse de Rentabilité par Produit</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white">Analyse de Rentabilité par Produit</h3>
             <div className="flex space-x-2">
                  <button 
                     onClick={() => setSortKey('totalProfit')}
-                    className={`px-3 py-1 text-sm rounded-full transition-colors ${sortKey === 'totalProfit' ? 'bg-primary-600 text-white font-semibold shadow' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`px-3 py-1 text-sm rounded-full transition-colors ${sortKey === 'totalProfit' ? 'bg-primary-600 text-white font-semibold shadow' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
                 >
                    Trier par Profit
                 </button>
                 <button 
                      onClick={() => setSortKey('totalQuantity')}
-                     className={`px-3 py-1 text-sm rounded-full transition-colors ${sortKey === 'totalQuantity' ? 'bg-primary-600 text-white font-semibold shadow' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                     className={`px-3 py-1 text-sm rounded-full transition-colors ${sortKey === 'totalQuantity' ? 'bg-primary-600 text-white font-semibold shadow' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
                 >
                     Trier par Quantité
                 </button>
@@ -185,8 +185,8 @@ const ProductProfitChart: React.FC<{
             <ResponsiveContainer width="100%" height={400}>
                 <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                    <XAxis type="number" tickFormatter={(value) => new Intl.NumberFormat('fr-FR').format(value as number)} />
-                    <YAxis type="category" dataKey="productName" width={150} tick={{ fontSize: 12 }} />
+                    <XAxis type="number" tick={{ fill: '#6B7280', fontSize: 12 }} />
+                    <YAxis type="category" dataKey="productName" width={150} tick={{ fontSize: 12, fill: '#6B7280' }} />
                     <Tooltip content={<CustomProfitTooltip />} cursor={{ fill: 'rgba(239, 246, 255, 0.5)' }}/>
                     <Legend />
                     <Bar dataKey="totalProfit" name="Profit" fill="#22c55e" radius={[0, 4, 4, 0]} />
@@ -194,7 +194,7 @@ const ProductProfitChart: React.FC<{
             </ResponsiveContainer>
         ) : (
             <div className="flex items-center justify-center h-48">
-                <p className="text-gray-500">Aucune donnée de profit à afficher pour la période sélectionnée.</p>
+                <p className="text-gray-500 dark:text-gray-400">Aucune donnée de profit à afficher pour la période sélectionnée.</p>
             </div>
         )}
     </div>
@@ -401,30 +401,30 @@ export const Reports: React.FC<ReportsProps> = ({ business, hideFilters = false 
     return (
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                <h1 className="text-3xl font-bold text-gray-800">Rapports - {business.name}</h1>
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Rapports - {business.name}</h1>
                 <div className="flex items-center space-x-4">
-                    <div className="flex bg-white rounded-lg shadow-md overflow-hidden">
+                    <div className="flex bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
                         <button 
-                            className={`px-4 py-2 text-sm font-medium ${reportView === 'summary' ? 'bg-primary-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                            className={`px-4 py-2 text-sm font-medium ${reportView === 'summary' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                             onClick={() => setReportView('summary')}
                         >
                             Résumé
                         </button>
                         <button 
-                            className={`px-4 py-2 text-sm font-medium ${reportView === 'details' ? 'bg-primary-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                            className={`px-4 py-2 text-sm font-medium ${reportView === 'details' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                             onClick={() => setReportView('details')}
                         >
                             Détails
                         </button>
                         <button 
-                            className={`px-4 py-2 text-sm font-medium ${reportView === 'comparison' ? 'bg-primary-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                            className={`px-4 py-2 text-sm font-medium ${reportView === 'comparison' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                             onClick={() => setReportView('comparison')}
                         >
                             Comparaison
                         </button>
                     </div>
                     {!hideFilters && (
-                        <div className="bg-white p-3 rounded-lg shadow-md">
+                        <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-md">
                             <DateFilter onDateRangeChange={handleDateRangeChange} />
                         </div>
                     )}
@@ -450,8 +450,8 @@ export const Reports: React.FC<ReportsProps> = ({ business, hideFilters = false 
             {/* Graphiques */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Graphique mensuel */}
-                <div className="bg-white p-6 rounded-xl shadow-lg">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4">Performance Mensuelle</h3>
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Performance Mensuelle</h3>
                     {monthlyChartData.length > 0 ? (
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={monthlyChartData}>
@@ -473,14 +473,14 @@ export const Reports: React.FC<ReportsProps> = ({ business, hideFilters = false 
                         </ResponsiveContainer>
                     ) : (
                         <div className="flex items-center justify-center h-64">
-                            <p className="text-gray-500">Aucune donnée à afficher pour la période sélectionnée.</p>
+                            <p className="text-gray-500 dark:text-gray-400">Aucune donnée à afficher pour la période sélectionnée.</p>
                         </div>
                     )}
                 </div>
 
                 {/* Répartition des dépenses par catégorie */}
-                <div className="bg-white p-6 rounded-xl shadow-lg">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4">Répartition des Dépenses</h3>
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Répartition des Dépenses</h3>
                     {expenseByCategory.length > 0 ? (
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
@@ -507,7 +507,7 @@ export const Reports: React.FC<ReportsProps> = ({ business, hideFilters = false 
                         </ResponsiveContainer>
                     ) : (
                         <div className="flex items-center justify-center h-64">
-                            <p className="text-gray-500">Aucune dépense à afficher pour la période sélectionnée.</p>
+                            <p className="text-gray-500 dark:text-gray-400">Aucune dépense à afficher pour la période sélectionnée.</p>
                         </div>
                     )}
                 </div>

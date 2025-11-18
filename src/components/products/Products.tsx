@@ -42,6 +42,10 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
         totalCost: 0,
         supplierId: '',
     });
+    
+    // États pour la pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10); // Nombre d'éléments par page
 
     const { currentUser } = useAuth();
     
@@ -54,6 +58,37 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
     const updateProductMutation = useUpdateProduct();
     const deleteProductMutation = useDeleteProduct();
     const restockProductMutation = useRestockProduct();
+    
+    // Calculer les produits paginés
+    const paginatedProducts = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return products.slice(startIndex, endIndex);
+    }, [products, currentPage, itemsPerPage]);
+    
+    // Calculer le nombre total de pages
+    const totalPages = useMemo(() => {
+        return Math.ceil(products.length / itemsPerPage);
+    }, [products.length, itemsPerPage]);
+    
+    // Fonction pour changer de page
+    const goToPage = (page: number) => {
+        setCurrentPage(page);
+    };
+    
+    // Fonction pour aller à la page suivante
+    const goToNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+    
+    // Fonction pour aller à la page précédente
+    const goToPrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
 
     const handleOpenModal = (product?: Product) => {
         if (product) {
@@ -343,8 +378,62 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
             
             <Table 
                 columns={columns} 
-                data={products} 
+                data={paginatedProducts} 
             />
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex justify-between items-center mt-4">
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                        Affichage de {(currentPage - 1) * itemsPerPage + 1} à {Math.min(currentPage * itemsPerPage, products.length)} sur {products.length} produits
+                    </div>
+                    <div className="flex space-x-2">
+                        <Button 
+                            variant="secondary" 
+                            onClick={goToPrevPage} 
+                            disabled={currentPage === 1}
+                            className="px-3 py-1 text-sm"
+                        >
+                            Précédent
+                        </Button>
+                        
+                        {/* Afficher les numéros de page */}
+                        {[...Array(totalPages)].map((_, i) => {
+                            const page = i + 1;
+                            // Afficher uniquement les pages autour de la page actuelle
+                            if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                                return (
+                                    <Button
+                                        key={page}
+                                        variant={currentPage === page ? "primary" : "secondary"}
+                                        onClick={() => goToPage(page)}
+                                        className="px-3 py-1 text-sm"
+                                    >
+                                        {page}
+                                    </Button>
+                                );
+                            } else if (page === currentPage - 2 || page === currentPage + 2) {
+                                // Afficher des points de suspension pour les pages éloignées
+                                return (
+                                    <span key={page} className="px-2 py-1 text-gray-500">
+                                        ...
+                                    </span>
+                                );
+                            }
+                            return null;
+                        })}
+                        
+                        <Button 
+                            variant="secondary" 
+                            onClick={goToNextPage} 
+                            disabled={currentPage === totalPages}
+                            className="px-3 py-1 text-sm"
+                        >
+                            Suivant
+                        </Button>
+                    </div>
+                </div>
+            )}
             
             <Modal 
                 isOpen={isModalOpen} 

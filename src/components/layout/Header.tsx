@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import type { User, Business, Product } from '../../types';
+import { NotificationPanel } from '../shared/NotificationPanel';
+import { useNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead, useDeleteNotification } from '@/hooks/useNotification';
+import { Bell } from 'lucide-react';
 
 interface HeaderProps {
     currentUser: User;
@@ -31,12 +34,20 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, businesses, activeB
     const { theme, toggleTheme } = useTheme();
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [alertsOpen, setAlertsOpen] = useState(false);
+    const [notificationsOpen, setNotificationsOpen] = useState(false);
+    
+    // Hooks pour les notifications
+    const { data: notifications = [], refetch } = useNotifications(activeBusiness?.id || '');
+    const markAsReadMutation = useMarkNotificationAsRead();
+    const markAllAsReadMutation = useMarkAllNotificationsAsRead();
+    const deleteNotificationMutation = useDeleteNotification();
 
     const handleLogout = (e: React.MouseEvent) => {
         e.preventDefault();
         onLogout();
         setUserDropdownOpen(false);
         setAlertsOpen(false);
+        setNotificationsOpen(false);
     };
 
     // Calculate total businesses for admin users
@@ -52,18 +63,54 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, businesses, activeB
         setActiveBusinessId(businessId);
         // The persistence is handled in MainLayout via useEffect
     };
+    
+    // Gérer les notifications
+    const handleMarkAsRead = (id: string) => {
+        markAsReadMutation.mutate(id, {
+            onSuccess: () => {
+                refetch();
+            }
+        });
+    };
+    
+    const handleMarkAllAsRead = () => {
+        if (activeBusiness?.id) {
+            markAllAsReadMutation.mutate(activeBusiness.id, {
+                onSuccess: () => {
+                    refetch();
+                }
+            });
+        }
+    };
+    
+    const handleDeleteNotification = (id: string) => {
+        deleteNotificationMutation.mutate(id, {
+            onSuccess: () => {
+                refetch();
+            }
+        });
+    };
 
     return (
         <header className="flex items-center justify-between h-20 px-6 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-            <div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-                    {activeBusiness ? activeBusiness.name : (businesses.length > 0 ? 'Sélectionnez une entreprise' : 'Aucune entreprise disponible')}
-                </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {currentUser.role === 'ADMIN' 
-                        ? `${totalBusinesses} entreprise(s) gérée(s)` 
-                        : (activeBusiness ? activeBusiness.type : (businesses.length > 0 ? 'Aucune entreprise sélectionnée' : 'Aucune entreprise disponible'))}
-                </p>
+            <div className="flex items-center space-x-4">
+                {activeBusiness?.logoUrl && (
+                    <img 
+                        src={activeBusiness.logoUrl} 
+                        alt={`${activeBusiness.name} logo`} 
+                        className="w-12 h-12 object-contain rounded-md"
+                    />
+                )}
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+                        {activeBusiness ? activeBusiness.name : (businesses.length > 0 ? 'Sélectionnez une entreprise' : 'Aucune entreprise disponible')}
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {currentUser.role === 'ADMIN' 
+                            ? `${totalBusinesses} entreprise(s) gérée(s)` 
+                            : (activeBusiness ? activeBusiness.type : (businesses.length > 0 ? 'Aucune entreprise sélectionnée' : 'Aucune entreprise disponible'))}
+                    </p>
+                </div>
             </div>
 
             <div className="flex items-center space-x-6">
@@ -102,10 +149,34 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, businesses, activeB
                     </div>
                 )}
 
+                {/* Notifications */}
+                <div className="relative">
+                    <button 
+                        onClick={() => {
+                            setNotificationsOpen(!notificationsOpen);
+                            setAlertsOpen(false);
+                        }} 
+                        className="relative p-2 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800"
+                    >
+                        <Bell className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+                        {notifications.filter(n => !n.read).length > 0 && (
+                            <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-800 animate-ping"></span>
+                        )}
+                    </button>
+                </div>
+
                 {/* Alerts */}
                 <div className="relative">
-                    <button onClick={() => setAlertsOpen(!alertsOpen)} className="relative p-2 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 dark:focus:ring-offset-gray-800">
-                        <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                    <button 
+                        onClick={() => {
+                            setAlertsOpen(!alertsOpen);
+                            setNotificationsOpen(false);
+                        }} 
+                        className="relative p-2 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 dark:focus:ring-offset-gray-800"
+                    >
+                        <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
                         {totalLowStockProducts > 0 && (
                             <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-800 animate-ping"></span>
                         )}
@@ -120,7 +191,7 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, businesses, activeB
                         <div>
                             <span className="text-sm font-semibold text-gray-700 dark:text-white">{currentUser.name}</span>
                             <span className="text-xs text-gray-500 dark:text-gray-300 block">
-                                {currentUser.role === 'ADMIN' ? 'Administrateur' : 'MANAGER'}
+                                {currentUser.role === 'ADMIN' ? 'Administrateur' : 'Manager'}
                             </span>
                         </div>
                          <svg className={`w-4 h-4 text-gray-500 dark:text-gray-300 transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -133,6 +204,17 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, businesses, activeB
                     )}
                 </div>
             </div>
+            
+            {/* Panneau de notifications */}
+            {notificationsOpen && activeBusiness && (
+                <NotificationPanel
+                    notifications={notifications}
+                    onMarkAsRead={handleMarkAsRead}
+                    onMarkAllAsRead={handleMarkAllAsRead}
+                    onDelete={handleDeleteNotification}
+                    onClose={() => setNotificationsOpen(false)}
+                />
+            )}
         </header>
     );
 };

@@ -7,6 +7,7 @@ import {
   deleteBusiness 
 } from '@/actions/businessActions';
 import { Business } from '@/types';
+import { DataTransferService } from '@/services/dataTransferService';
 
 // Hook for fetching all businesses
 export const useBusinesses = () => {
@@ -66,6 +67,32 @@ export const useDeleteBusiness = () => {
   return useMutation({
     mutationFn: deleteBusiness,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['businesses'] });
+    },
+  });
+};
+
+// Hook for transferring data between businesses
+export const useTransferData = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ 
+      sourceBusiness, 
+      targetBusiness, 
+      dataTypes 
+    }: { 
+      sourceBusiness: Business; 
+      targetBusiness: Business; 
+      dataTypes: string[] 
+    }) => {
+      // Dans une vraie application, cela ferait un appel API
+      // Pour cette démonstration, nous utilisons le service local
+      await DataTransferService.transferData(sourceBusiness, targetBusiness, dataTypes);
+      return { success: true };
+    },
+    onSuccess: () => {
+      // Invalider les queries pour forcer un rechargement des données
       queryClient.invalidateQueries({ queryKey: ['businesses'] });
     },
   });
