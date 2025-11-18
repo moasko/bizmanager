@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import type { Business, Product } from '@/types';
+import type { Business, Product, User } from '@/types';
 import { Button } from '../shared/Button';
 import { Modal } from '../shared/Modal';
 import { Table } from '../shared/Table';
-import { useProducts, useCreateProduct, useUpdateProduct } from '@/hooks/useProduct';
+import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/hooks/useProduct';
 import { useRestockProduct } from '@/hooks/useRestock';
 import { useSuppliers } from '@/hooks/useSupplier';
+import { useAuth } from '@/contexts/AuthContext';
+import { Edit, PackagePlus, Trash2 } from 'lucide-react';
 
 interface ProductsProps {
     business: Business;
@@ -18,7 +20,9 @@ interface ProductsProps {
 export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUpdateProduct }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isRestockModalOpen, setIsRestockModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
     const [restockingProduct, setRestockingProduct] = useState<Product | null>(null);
     const [formData, setFormData] = useState<Omit<Product, 'id' | 'businessId' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'sku' | 'barcode' | 'images'>>({ 
         name: '', 
@@ -39,6 +43,8 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
         supplierId: '',
     });
 
+    const { currentUser } = useAuth();
+    
     // Utiliser useMemo pour s'assurer que les données sont rechargées lorsque l'entreprise change
     const businessId = useMemo(() => business.id, [business.id]);
     
@@ -46,6 +52,7 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
     const { data: suppliers = [], isLoading: isSuppliersLoading } = useSuppliers(businessId);
     const createProductMutation = useCreateProduct();
     const updateProductMutation = useUpdateProduct();
+    const deleteProductMutation = useDeleteProduct();
     const restockProductMutation = useRestockProduct();
 
     const handleOpenModal = (product?: Product) => {
@@ -93,6 +100,11 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
         setIsRestockModalOpen(true);
     };
 
+    const handleOpenDeleteModal = (product: Product) => {
+        setDeletingProduct(product);
+        setIsDeleteModalOpen(true);
+    };
+
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setEditingProduct(null);
@@ -101,6 +113,11 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
     const handleCloseRestockModal = () => {
         setIsRestockModalOpen(false);
         setRestockingProduct(null);
+    };
+
+    const handleCloseDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setDeletingProduct(null);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -208,6 +225,17 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
         handleCloseRestockModal();
     };
 
+    const handleDeleteProduct = async () => {
+        if (deletingProduct) {
+            try {
+                await deleteProductMutation.mutateAsync(deletingProduct.id);
+                handleCloseDeleteModal();
+            } catch (error) {
+                console.error('Error deleting product:', error);
+            }
+        }
+    };
+
     const columns = [
         { header: 'Nom', accessor: 'name' },
         { header: 'Catégorie', accessor: 'category' },
@@ -262,14 +290,28 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
                     <Button 
                         variant="secondary"
                         onClick={() => handleOpenModal(item)}
+                        className="p-2"
+                        aria-label="Modifier"
                     >
-                        Modifier
+                        <Edit size={16} />
                     </Button>
                     <Button 
                         onClick={() => handleOpenRestockModal(item)}
+                        className="p-2"
+                        aria-label="Réapprovisionner"
                     >
-                        Réapprovisionner
+                        <PackagePlus size={16} />
                     </Button>
+                    {currentUser?.role === 'ADMIN' && (
+                        <Button 
+                            variant="danger"
+                            onClick={() => handleOpenDeleteModal(item)}
+                            className="p-2"
+                            aria-label="Supprimer"
+                        >
+                            <Trash2 size={16} />
+                        </Button>
+                    )}
                 </div>
             )
         }
@@ -508,6 +550,20 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
                         <Button type="submit">Réapprovisionner</Button>
                     </div>
                 </form>
+            </Modal>
+            
+            <Modal 
+                isOpen={isDeleteModalOpen} 
+                onClose={handleCloseDeleteModal} 
+                title="Confirmer la suppression"
+            >
+                <div className="space-y-4">
+                    <p>Êtes-vous sûr de vouloir supprimer le produit "{deletingProduct?.name}" ? Cette action est irréversible.</p>
+                    <div className="flex justify-end space-x-3 pt-4">
+                        <Button variant="secondary" onClick={handleCloseDeleteModal}>Annuler</Button>
+                        <Button variant="danger" onClick={handleDeleteProduct}>Supprimer</Button>
+                    </div>
+                </div>
             </Modal>
         </div>
     );
