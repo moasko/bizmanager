@@ -59,17 +59,7 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
     const deleteProductMutation = useDeleteProduct();
     const restockProductMutation = useRestockProduct();
     
-    // Calculer les produits paginés
-    const paginatedProducts = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        return products.slice(startIndex, endIndex);
-    }, [products, currentPage, itemsPerPage]);
-    
-    // Calculer le nombre total de pages
-    const totalPages = useMemo(() => {
-        return Math.ceil(products.length / itemsPerPage);
-    }, [products.length, itemsPerPage]);
+
     
     // Fonction pour changer de page
     const goToPage = (page: number) => {
@@ -369,11 +359,59 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
         );
     }
 
+    // État pour la recherche
+    const [searchTerm, setSearchTerm] = useState('');
+    
+    // Filtrer les produits en fonction du terme de recherche
+    const filteredProducts = useMemo(() => {
+        if (!searchTerm) return products;
+        
+        const term = searchTerm.toLowerCase().trim();
+        return products.filter(product => 
+            product.name.toLowerCase().includes(term) ||
+            product.category.toLowerCase().includes(term) ||
+            product.id.toLowerCase().includes(term)
+        );
+    }, [products, searchTerm]);
+    
+    // Recalculer les produits paginés en fonction des produits filtrés
+    const paginatedProducts = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredProducts.slice(startIndex, endIndex);
+    }, [filteredProducts, currentPage, itemsPerPage]);
+    
+    // Recalculer le nombre total de pages en fonction des produits filtrés
+    const totalPages = useMemo(() => {
+        return Math.ceil(filteredProducts.length / itemsPerPage);
+    }, [filteredProducts.length, itemsPerPage]);
+    
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-gray-800">Produits - {business.name}</h1>
                 <Button onClick={() => handleOpenModal()}>Ajouter un Produit</Button>
+            </div>
+            
+            {/* Barre de recherche */}
+            <div className="mb-4">
+                <div className="relative">
+                    <input
+                        type="text"
+                        placeholder="Rechercher par nom, catégorie ou ID..."
+                        value={searchTerm}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setCurrentPage(1); // Revenir à la première page lors d'une nouvelle recherche
+                        }}
+                        className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                    />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
             </div>
             
             <Table 
@@ -385,7 +423,8 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
             {totalPages > 1 && (
                 <div className="flex justify-between items-center mt-4">
                     <div className="text-sm text-gray-700 dark:text-gray-300">
-                        Affichage de {(currentPage - 1) * itemsPerPage + 1} à {Math.min(currentPage * itemsPerPage, products.length)} sur {products.length} produits
+                        Affichage de {(currentPage - 1) * itemsPerPage + 1} à {Math.min(currentPage * itemsPerPage, filteredProducts.length)} sur {filteredProducts.length} produits
+                        {searchTerm && ` (filtrés sur ${products.length} au total)`}
                     </div>
                     <div className="flex space-x-2">
                         <Button 
