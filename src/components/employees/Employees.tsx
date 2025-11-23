@@ -5,7 +5,7 @@ import type { User, Business, UserRole } from '@/types';
 import { Button } from '../shared/Button';
 import { Modal } from '../shared/Modal';
 import { Table, Column } from '../shared/Table';
-import { useUsers, useCreateUser, useUpdateUser } from '@/hooks/useUser';
+import { useUsers, useCreateUser, useUpdateUser, useDeleteUser } from '@/hooks/useUser';
 import { Pen, PenBox, TrashIcon } from 'lucide-react';
 
 interface EmployeesProps {
@@ -36,10 +36,13 @@ export const Employees: React.FC<EmployeesProps> = ({ users, allBusinesses }) =>
         avatarUrl: '', 
         managedBusinessIds: [] 
     });
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
     const { data: fetchedUsers = [], isLoading } = useUsers();
     const createUserMutation = useCreateUser();
     const updateUserMutation = useUpdateUser();
+    const deleteUserMutation = useDeleteUser();
 
     const handleOpenModal = (user?: User) => {
         if (user) {
@@ -114,6 +117,19 @@ export const Employees: React.FC<EmployeesProps> = ({ users, allBusinesses }) =>
         handleCloseModal();
     };
 
+    const handleDeleteUser = (user: User) => {
+        setUserToDelete(user);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDeleteUser = async () => {
+        if (userToDelete) {
+            await deleteUserMutation.mutateAsync(userToDelete.id);
+            setIsDeleteModalOpen(false);
+            setUserToDelete(null);
+        }
+    };
+
     const columns: Column<User>[] = [
         { header: 'Nom', accessor: 'name' },
         { header: 'Email', accessor: 'email' },
@@ -145,7 +161,7 @@ export const Employees: React.FC<EmployeesProps> = ({ users, allBusinesses }) =>
                     <button onClick={() => handleOpenModal(item)} className="text-blue-500 hover:underline p-2 hover:bg-blue-200 rounded">
                         <PenBox className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleOpenModal(item)} className="text-red-500 hover:underline p-2 hover:bg-red-200 rounded">
+                    <button onClick={() => handleDeleteUser(item)} className="text-red-500 hover:underline p-2 hover:bg-red-200 rounded">
                         <TrashIcon className="w-4 h-4" />
                     </button>
                 </div>
@@ -282,6 +298,33 @@ export const Employees: React.FC<EmployeesProps> = ({ users, allBusinesses }) =>
                         </Button>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Modal de confirmation de suppression */}
+            <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Confirmer la suppression">
+                <div className="space-y-4">
+                    <p className="text-gray-700 dark:text-gray-300">
+                        Êtes-vous sûr de vouloir supprimer l'employé <strong>{userToDelete?.name}</strong> ? Cette action est irréversible.
+                    </p>
+                    <div className="flex justify-end space-x-3 pt-4">
+                        <Button 
+                            type="button" 
+                            variant="secondary" 
+                            onClick={() => setIsDeleteModalOpen(false)}
+                            disabled={deleteUserMutation.isPending}
+                        >
+                            Annuler
+                        </Button>
+                        <Button 
+                            type="button" 
+                            variant="danger" 
+                            onClick={confirmDeleteUser}
+                            disabled={deleteUserMutation.isPending}
+                        >
+                            {deleteUserMutation.isPending ? 'Suppression...' : 'Supprimer'}
+                        </Button>
+                    </div>
+                </div>
             </Modal>
         </div>
     );

@@ -311,8 +311,20 @@ export const DetailedReports: React.FC<DetailedReportsProps> = ({ business, onCl
 
   // Calculer les statistiques globales
   const totalSales = business.sales?.reduce((sum, sale) => sum + sale.total, 0) || 0;
+  
+  // Calcul du COGS (Coût des marchandises vendues)
+  const totalCOGS = business.sales?.reduce((sum, sale) => {
+    if (sale.productId) {
+      const product = business.products?.find(p => p.id === sale.productId);
+      const wholesalePrice = product ? product.wholesalePrice : 0;
+      return sum + (wholesalePrice * sale.quantity);
+    }
+    return sum;
+  }, 0) || 0;
+  
   const totalExpenses = business.expenses?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
-  const netProfit = totalSales - totalExpenses;
+  // Profit net = Revenus - COGS - Dépenses
+  const netProfit = totalSales - totalCOGS - totalExpenses;
   const totalProducts = business.products?.length || 0;
   const lowStockProducts = business.products?.filter(p => p.stock <= p.minStock).length || 0;
 

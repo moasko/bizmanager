@@ -89,6 +89,7 @@ const calculateOperatingProfit = (sales: Sale[], expenses: Expense[], products: 
 const calculateNetProfit = (sales: Sale[], expenses: Expense[], products: Product[]): number => {
     const grossProfit = calculateGrossProfit(sales, expenses, products);
     const totalExpenses = calculateTotalExpenses(expenses);
+    // Le profit net doit être calculé à partir du profit brut moins toutes les dépenses
     return grossProfit - totalExpenses;
 };
 

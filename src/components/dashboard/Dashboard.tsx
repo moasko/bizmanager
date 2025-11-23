@@ -117,6 +117,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ business }) => {
 
     const { totalRevenue, totalExpenses, totalProfit, clientCount, recentSales, lowStockProducts } = useMemo(() => {
         const totalRevenue = (filteredData.sales || []).reduce((sum, sale) => sum + (sale.total || 0), 0);
+        
+        // Calcul du COGS (Coût des marchandises vendues)
+        const totalCOGS = (filteredData.sales || []).reduce((sum, sale) => {
+            if (sale.productId && sale.productId !== null) {
+                const product = (filteredData.products || []).find(p => p.id === sale.productId);
+                const wholesalePrice = product ? product.wholesalePrice : 0;
+                return sum + (wholesalePrice * (sale.quantity || 0));
+            }
+            return sum;
+        }, 0);
+        
         const totalExpenses = (filteredData.expenses || []).reduce((sum, exp) => sum + (exp.amount || 0), 0);
         const recentSales = [...(filteredData.sales || [])].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
         const lowStockProducts = (filteredData.products || []).filter(p => (p.stock || 0) < 10);
@@ -124,7 +135,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ business }) => {
         return {
             totalRevenue,
             totalExpenses,
-            totalProfit: totalRevenue - totalExpenses,
+            // Profit = Revenus - COGS - Dépenses
+            totalProfit: totalRevenue - totalCOGS - totalExpenses,
             clientCount: (filteredData.clients || []).length,
             recentSales,
             lowStockProducts

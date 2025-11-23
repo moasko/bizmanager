@@ -381,9 +381,22 @@ export const Reports: React.FC<ReportsProps> = ({ business, hideFilters = false 
         return filteredData.expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
     }, [filteredData.expenses]);
 
+    // Calcul du COGS (Coût des marchandises vendues)
+    const totalCOGS = useMemo(() => {
+        return filteredData.sales.reduce((sum, sale) => {
+            if (sale.productId && sale.productId !== null) {
+                const product = businessData.products.find(p => p.id === sale.productId);
+                const wholesalePrice = product ? product.wholesalePrice : 0;
+                return sum + (wholesalePrice * (sale.quantity || 0));
+            }
+            return sum;
+        }, 0);
+    }, [filteredData.sales, businessData.products]);
+
     const totalProfit = useMemo(() => {
-        return (totalRevenue || 0) - (totalExpenses || 0);
-    }, [totalRevenue, totalExpenses]);
+        // Profit = Revenus - COGS - Dépenses opérationnelles
+        return (totalRevenue || 0) - (totalCOGS || 0) - (totalExpenses || 0);
+    }, [totalRevenue, totalCOGS, totalExpenses]);
 
     const handleDateRangeChange = useCallback((start: string, end: string) => {
         // S'assurer que les dates sont au bon format
