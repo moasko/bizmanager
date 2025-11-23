@@ -13,6 +13,7 @@ async function verifyToken(token: string) {
       return payload;
     }
     
+    
     return null;
   } catch (error) {
     return null;
