@@ -26,24 +26,24 @@ export const Table = <T extends { id: string },>(
 
     const getSortIcon = (accessor: keyof T) => {
         if (!sortConfig || sortConfig.key !== accessor) {
-            return <ChevronUp className="h-4 w-4 text-gray-400 dark:text-gray-500" />;
+            return <ChevronUp className="h-4 w-4 text-gray-400" />;
         }
         return sortConfig.direction === 'asc' ? 
-            <ChevronUp className="h-4 w-4 text-gray-900 dark:text-white" /> : 
-            <ChevronDown className="h-4 w-4 text-gray-900 dark:text-white" />;
+            <ChevronUp className="h-4 w-4 text-blue-600" /> : 
+            <ChevronDown className="h-4 w-4 text-blue-600" />;
     };
 
     return (
-        <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
+        <div className="overflow-x-auto rounded-lg">
+            <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                     <tr>
                         {columns.map((col, index) => (
                             <th 
                                 key={`${String(col.accessor)}-${index}`} 
                                 scope="col" 
-                                className={`px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider ${
-                                    col.sortable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600' : ''
+                                className={`px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider ${
+                                    col.sortable ? 'cursor-pointer hover:bg-gray-200 transition-colors duration-200' : ''
                                 }`}
                                 onClick={() => col.sortable && handleSort(col.accessor)}
                             >
@@ -59,11 +59,11 @@ export const Table = <T extends { id: string },>(
                         ))}
                     </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="bg-white divide-y divide-gray-200">
                     {data.map((item: any) => (
-                        <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <tr key={item.id} className="hover:bg-blue-50 transition-colors duration-150">
                             {columns.map((col, index) => (
-                                <td key={`${String(col.accessor)}-${index}`} className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                <td key={`${String(col.accessor)}-${index}`} className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                                     {col.render ? col.render(item) : (item[col.accessor] as React.ReactNode)}
                                 </td>
                             ))}

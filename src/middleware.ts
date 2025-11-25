@@ -95,8 +95,10 @@ export async function middleware(request: NextRequest) {
       return response;
     }
     
-    // Token valide, autoriser l'accès
-    return NextResponse.next();
+    // Token valide, autoriser l'accès et ajouter le rôle dans les en-têtes
+    const response = NextResponse.next();
+    response.headers.set('x-user-role', payload.role);
+    return response;
   } catch (error) {
     // Erreur lors de la vérification du token, rediriger vers la page de login
     const loginUrl = new URL('/login', request.url);

@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { Sale } from '@/types';
+import { headers } from 'next/headers';
 
 // Fetch sales for a business
 export async function getSales(businessId: string) {
@@ -93,6 +94,14 @@ export async function createSale(businessId: string, saleData: Omit<Sale, 'id' |
 // Update a sale
 export async function updateSale(id: string, saleData: Partial<Omit<Sale, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>>) {
   try {
+    // Vérifier les autorisations - seul un admin peut modifier une vente
+    const headersList = await headers();
+    const userRole = headersList.get('x-user-role');
+    
+    if (userRole !== 'ADMIN') {
+      return { success: false, error: 'Seuls les administrateurs peuvent modifier les ventes' };
+    }
+    
     const sale = await prisma.sale.update({
       where: { id },
       data: saleData,
@@ -108,6 +117,14 @@ export async function updateSale(id: string, saleData: Partial<Omit<Sale, 'id' |
 // Delete a sale
 export async function deleteSale(id: string) {
   try {
+    // Vérifier les autorisations - seul un admin peut supprimer une vente
+    const headersList = await headers();
+    const userRole = headersList.get('x-user-role');
+    
+    if (userRole !== 'ADMIN') {
+      return { success: false, error: 'Seuls les administrateurs peuvent supprimer les ventes' };
+    }
+    
     await prisma.sale.delete({
       where: { id },
     });

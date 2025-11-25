@@ -1,9 +1,9 @@
 "use client";
 
 import React from 'react';
-import { Clients } from '@/components/clients/Clients';
-import { useCreateClient, useUpdateClient } from '@/hooks/useClient'; // Ajout de useUpdateClient
-import { getClients } from '@/actions/clientActions'; // Ajout de getClients
+import { ClientsRefactored } from '@/components/clients/ClientsRefactored';
+import { useCreateClient, useUpdateClient } from '@/hooks/useClient';
+import { getClients } from '@/actions/clientActions';
 import { useActiveBusiness } from '@/contexts/ActiveBusinessContext';
 import type { Business } from '@/types';
 
@@ -13,7 +13,7 @@ interface ClientsContentProps {
 
 export const ClientsContent: React.FC<ClientsContentProps> = ({ activeBusiness }) => {
   const { mutateAsync: createClient } = useCreateClient();
-  const { mutateAsync: updateClient } = useUpdateClient(); // Ajout du hook pour mettre à jour les clients
+  const { mutateAsync: updateClient } = useUpdateClient();
   
   // Use context if no prop is provided (for backward compatibility)
   const { activeBusiness: contextBusiness } = useActiveBusiness();
@@ -53,7 +53,7 @@ export const ClientsContent: React.FC<ClientsContentProps> = ({ activeBusiness }
   };
 
   return (
-    <Clients 
+    <ClientsRefactored 
       business={business} 
       onAddClient={handleAddClient} 
       onRecordPayment={handleRecordPayment} 
