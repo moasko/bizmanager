@@ -3,36 +3,18 @@
 import React, { useState, useMemo } from 'react';
 import type { Business, User } from '@/types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+// Importer les fonctions de calcul depuis le nouveau fichier
+import { 
+    calculateTotalSalesRevenue, 
+    calculateCOGS, 
+    calculateOperatingExpenses,
+    formatCurrency
+} from '@/utils/calculations';
 
 interface SimplifiedDashboardProps {
     allBusinesses: Business[];
     allUsers: User[];
 }
-
-// Helper function to calculate total sales revenue
-const calculateTotalSalesRevenue = (sales: any[]): number => {
-    return sales.reduce((sum, sale) => sum + sale.total, 0);
-};
-
-// Helper function to calculate cost of goods sold (COGS)
-const calculateCOGS = (sales: any[], products: any[]): number => {
-    return sales.reduce((sum, sale) => {
-        // Find the product to get its wholesale price
-        const product = products.find((p: any) => p.id === sale.productId);
-        const wholesalePrice = product ? product.wholesalePrice : 0;
-        return sum + (wholesalePrice * sale.quantity);
-    }, 0);
-};
-
-// Helper function to calculate operational expenses
-const calculateOperationalExpenses = (expenses: any[]): number => {
-    return expenses.reduce((sum, expense) => sum + expense.amount, 0);
-};
-
-// Helper function to format currency
-const formatCurrency = (amount: number): string => {
-    return `${amount?.toLocaleString('fr-FR')} FCFA`;
-};
 
 export const SimplifiedDashboard: React.FC<SimplifiedDashboardProps> = ({ allBusinesses, allUsers }) => {
     const [selectedPeriod, setSelectedPeriod] = useState<'all' | 'day' | 'week' | 'month' | 'quarter' | 'year'>('month');
@@ -102,7 +84,7 @@ export const SimplifiedDashboard: React.FC<SimplifiedDashboardProps> = ({ allBus
             
             totalRevenue += calculateTotalSalesRevenue(filteredSales);
             totalCOGS += calculateCOGS(filteredSales, business.products);
-            totalExpenses += calculateOperationalExpenses(filteredExpenses);
+            totalExpenses += calculateOperatingExpenses(filteredExpenses);
             totalProducts += business.products.length;
         });
         
@@ -128,8 +110,8 @@ export const SimplifiedDashboard: React.FC<SimplifiedDashboardProps> = ({ allBus
                 
                 const totalRevenue = calculateTotalSalesRevenue(filteredSales);
                 const totalCOGS = calculateCOGS(filteredSales, business.products);
-                const totalOperationalExpenses = calculateOperationalExpenses(filteredExpenses);
-                const netProfit = totalRevenue - totalCOGS - totalOperationalExpenses;
+                const totalOperatingExpenses = calculateOperatingExpenses(filteredExpenses);
+                const netProfit = totalRevenue - totalCOGS - totalOperatingExpenses;
 
                 return {
                     id: business.id,
@@ -177,11 +159,29 @@ export const SimplifiedDashboard: React.FC<SimplifiedDashboardProps> = ({ allBus
                 }
                 data[key].depenses += amount;
             });
+            
+            // Process COGS for each sale (to accurately calculate profit)
+            filteredSales.forEach(sale => {
+                const date = new Date(sale.date);
+                const month = date.getMonth();
+                const year = date.getFullYear();
+                const key = `${year}-${month}`;
+                
+                // Find the product to calculate COGS for this sale
+                const product = business.products.find((p: any) => p.id === sale.productId);
+                if (product && sale.quantity > 0) {
+                    const cogs = (product.wholesalePrice || 0) * sale.quantity;
+                    if (data[key]) {
+                        // Subtract COGS from profit calculation
+                        data[key].benefice -= cogs;
+                    }
+                }
+            });
         });
 
-        // Calculate profit for each month
+        // Calculate profit for each month (revenus - depenses - COGS)
         Object.values(data).forEach(monthData => {
-            monthData.benefice = monthData.revenus - monthData.depenses;
+            monthData.benefice = monthData.benefice + monthData.revenus - monthData.depenses;
         });
 
         return Object.values(data).sort((a, b) => {

@@ -157,6 +157,7 @@ model Expense {
 model Product {
   id             String       @id @default(uuid())
   name           String
+  description    String?
   category       String
   sku            String?      @unique
   barcode        String?      @unique

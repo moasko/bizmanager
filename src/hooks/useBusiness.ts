@@ -14,7 +14,10 @@ export const useBusinesses = () => {
   return useQuery({
     queryKey: ['businesses'],
     queryFn: getBusinesses,
-    select: (data) => data.success ? data.data : [],
+    select: (data) => {
+      console.log('Businesses fetched:', data);
+      return data.success ? data.data : [];
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
   });

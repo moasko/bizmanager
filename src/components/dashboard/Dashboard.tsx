@@ -3,8 +3,16 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import type { Business, Product } from '@/types';
 import { StatCard } from './StatCard';
+import { Button } from '../shared/Button';
+import { DateFilter } from '../shared/DateFilter';
+// Importer les fonctions de calcul depuis le nouveau fichier
+import { 
+    calculateTotalSalesRevenue,
+    calculateCOGS,
+    calculateOperatingExpenses,
+    formatCurrency
+} from '@/utils/calculations';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { DateFilter } from '../shared';
 
 interface DashboardProps {
     business: Business;
@@ -116,19 +124,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ business }) => {
     }, [business?.id, business?.sales?.length, business?.expenses?.length, business?.products?.length, business?.clients?.length, dateRange]);
 
     const { totalRevenue, totalExpenses, totalProfit, clientCount, recentSales, lowStockProducts } = useMemo(() => {
-        const totalRevenue = (filteredData.sales || []).reduce((sum, sale) => sum + (sale.total || 0), 0);
+        const totalRevenue = calculateTotalSalesRevenue(filteredData.sales || []);
         
         // Calcul du COGS (Coût des marchandises vendues)
-        const totalCOGS = (filteredData.sales || []).reduce((sum, sale) => {
-            if (sale.productId && sale.productId !== null) {
-                const product = (filteredData.products || []).find(p => p.id === sale.productId);
-                const wholesalePrice = product ? product.wholesalePrice : 0;
-                return sum + (wholesalePrice * (sale.quantity || 0));
-            }
-            return sum;
-        }, 0);
+        const totalCOGS = calculateCOGS(filteredData.sales || [], filteredData.products || []);
         
-        const totalExpenses = (filteredData.expenses || []).reduce((sum, exp) => sum + (exp.amount || 0), 0);
+        const totalExpenses = calculateOperatingExpenses(filteredData.expenses || []);
         const recentSales = [...(filteredData.sales || [])].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
         const lowStockProducts = (filteredData.products || []).filter(p => (p.stock || 0) < 10);
 

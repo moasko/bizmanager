@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import type { Business, Sale, Expense, Product } from '@/types';
+import type { Business, Product } from '@/types';
+import { Button } from '@/components/shared/Button';
+// Importer les fonctions de calcul depuis le nouveau fichier
+import { 
+    calculateTotalSalesRevenue,
+    calculateCOGS,
+    calculateOperatingExpenses,
+    formatCurrency
+} from '@/utils/calculations';
 import { 
   Chart as ChartJS,
   CategoryScale,
@@ -13,8 +21,6 @@ import {
   ArcElement
 } from 'chart.js';
 import { Bar, Line, Pie } from 'react-chartjs-2';
-import { formatCurrency } from '@/utils/formatters';
-import { Button } from '../shared/Button';
 
 // Enregistrer les composants de Chart.js
 ChartJS.register(
@@ -310,19 +316,12 @@ export const DetailedReports: React.FC<DetailedReportsProps> = ({ business, onCl
   };
 
   // Calculer les statistiques globales
-  const totalSales = business.sales?.reduce((sum, sale) => sum + sale.total, 0) || 0;
+  const totalSales = calculateTotalSalesRevenue(business.sales || []);
   
   // Calcul du COGS (Coût des marchandises vendues)
-  const totalCOGS = business.sales?.reduce((sum, sale) => {
-    if (sale.productId) {
-      const product = business.products?.find(p => p.id === sale.productId);
-      const wholesalePrice = product ? product.wholesalePrice : 0;
-      return sum + (wholesalePrice * sale.quantity);
-    }
-    return sum;
-  }, 0) || 0;
+  const totalCOGS = calculateCOGS(business.sales || [], business.products || []);
   
-  const totalExpenses = business.expenses?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
+  const totalExpenses = calculateOperatingExpenses(business.expenses || []);
   // Profit net = Revenus - COGS - Dépenses
   const netProfit = totalSales - totalCOGS - totalExpenses;
   const totalProducts = business.products?.length || 0;

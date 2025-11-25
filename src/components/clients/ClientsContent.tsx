@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { Clients } from '@/components/clients/Clients';
-import { useCreateClient } from '@/hooks/useClient';
+import { useCreateClient, useUpdateClient } from '@/hooks/useClient'; // Ajout de useUpdateClient
+import { getClients } from '@/actions/clientActions'; // Ajout de getClients
 import { useActiveBusiness } from '@/contexts/ActiveBusinessContext';
 import type { Business } from '@/types';
 
@@ -12,6 +13,7 @@ interface ClientsContentProps {
 
 export const ClientsContent: React.FC<ClientsContentProps> = ({ activeBusiness }) => {
   const { mutateAsync: createClient } = useCreateClient();
+  const { mutateAsync: updateClient } = useUpdateClient(); // Ajout du hook pour mettre à jour les clients
   
   // Use context if no prop is provided (for backward compatibility)
   const { activeBusiness: contextBusiness } = useActiveBusiness();
@@ -30,8 +32,24 @@ export const ClientsContent: React.FC<ClientsContentProps> = ({ activeBusiness }
   };
   
   const handleRecordPayment = async (clientId: string, amount: number) => {
-    // Implementation would go here
-    console.log('Recording payment for client:', clientId, 'Amount:', amount);
+    try {
+      // Récupérer le client actuel
+      const response = await getClients(business.id);
+      if (response.success && response.data) {
+        const client = response.data.find((c: any) => c.id === clientId);
+        if (client) {
+          // Mettre à jour le solde du client (soustraire le montant du paiement)
+          await updateClient({ 
+            id: clientId, 
+            data: { 
+              balance: client.balance - amount 
+            } 
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error recording payment:', error);
+    }
   };
 
   return (

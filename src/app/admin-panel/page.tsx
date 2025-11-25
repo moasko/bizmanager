@@ -5,12 +5,19 @@ import { AdminPanel } from '@/components/admin/AdminPanel';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useBusinesses } from '@/hooks/useBusiness';
 import { useUsers } from '@/hooks/useUser';
-import { SimplifiedDashboard } from '@/components/admin/SimplifiedDashboard';
+
 
 export default function AdminPanelPage() {
-  const { data: businesses = [], isLoading: isBusinessesLoading } = useBusinesses();
-  const { data: users = [], isLoading: isUsersLoading } = useUsers();
+  const { data: businesses = [], isLoading: isBusinessesLoading, error: businessesError } = useBusinesses();
+  const { data: users = [], isLoading: isUsersLoading, error: usersError } = useUsers();
   
+  console.log('Businesses data:', businesses);
+  console.log('Users data:', users);
+  console.log('Businesses loading:', isBusinessesLoading);
+  console.log('Users loading:', isUsersLoading);
+  console.log('Businesses error:', businessesError);
+  console.log('Users error:', usersError);
+
 if (isBusinessesLoading || isUsersLoading) {
   return (
     <div className="flex w-full h-screen flex-col justify-center items-center  space-y-4">
@@ -31,7 +38,7 @@ if (isBusinessesLoading || isUsersLoading) {
   return (
     <MainLayout businesses={businesses}>
       <div className="p-4 md:p-8">
-        <SimplifiedDashboard allBusinesses={businesses} allUsers={users} />
+        <AdminPanel allBusinesses={businesses} allUsers={users} />
       </div>
     </MainLayout>
   );

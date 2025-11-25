@@ -1,47 +1,24 @@
 "use client";
 
-import React, { useState } from 'react';
-import type { Business, BusinessType, User, AuditLog } from '@/types';
-import { Button } from '../shared/Button';
-import { Modal } from '../shared/Modal';
-import { Table } from '../shared/Table';
+import React, { useState, useMemo } from 'react';
+import type { Business, BusinessType } from '@/types';
+import { Button } from '@/components/shared/Button';
+import { Table } from '@/components/shared/Table';
+import { Modal } from '@/components/shared/Modal';
+// Importer les fonctions de calcul depuis le nouveau fichier
+import { 
+    calculateTotalSalesRevenue,
+    calculateCOGS,
+    calculateOperatingExpenses,
+    calculateInventoryValue,
+    formatCurrency
+} from '@/utils/calculations';
 import { useBusinesses, useCreateBusiness, useUpdateBusiness, useDeleteBusiness, useTransferData } from '@/hooks/useBusiness';
 import { useUsers } from '@/hooks/useUser'; // Ajout de l'import pour useUsers
 import { Edit, Eye, Trash2, BarChart, ArrowRightLeft } from 'lucide-react';
 import { BusinessDetails } from './BusinessDetails';
 import { BusinessComparison } from './BusinessComparison';
 import { DataTransfer } from '../dataTransfer/DataTransfer';
-
-// Helper function to format currency
-const formatCurrency = (amount: number): string => {
-  return `${amount?.toLocaleString('fr-FR')} FCFA`;
-};
-
-// Helper function to export business data to CSV
-const exportBusinessDataToCSV = (business: Business) => {
-  const csvContent = [
-    ['Nom', business.name],
-    ['Type', business.type],
-    ['Pays', business.country || ''],
-    ['Ville', business.city || ''],
-    ['Devise', business.currency || ''],
-    ['Nombre de ventes', business.sales?.length || 0],
-    ['Nombre de dépenses', business.expenses?.length || 0],
-    ['Nombre de produits', business.products?.length || 0],
-    ['Nombre de clients', business.clients?.length || 0],
-    ['Nombre de fournisseurs', business.suppliers?.length || 0],
-  ].map(row => row.join(',')).join('\n');
-  
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', `entreprise-${business.name}.csv`);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
 
 interface SettingsProps {
   businesses: Business[];
@@ -203,38 +180,36 @@ export const Settings: React.FC<SettingsProps> = ({ businesses, onAddBusiness, o
     }
   };
 
-  const handleDelete = async (businessId: string) => {
-    if (displayedBusinesses.length <= 1) {
-      alert("Vous ne pouvez pas supprimer la dernière entreprise.");
-      return;
-    }
-
-    if (confirm("Êtes-vous sûr de vouloir supprimer cette entreprise ?")) {
-      try {
-        await deleteBusinessMutation.mutateAsync(businessId);
-        // Si l'entreprise supprimée était celle sélectionnée, désélectionner
-        if (selectedBusiness?.id === businessId) {
-          setSelectedBusiness(null);
-        }
-      } catch (error) {
-        console.error('Error deleting business:', error);
-      }
+  const handleDeleteBusiness = (id: string) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette entreprise ? Cette action est irréversible.')) {
+      deleteBusinessMutation.mutate(id);
     }
   };
 
-  // Helper function to calculate cost of goods sold (COGS)
-  const calculateCOGS = (sales: any[], products: any[]): number => {
-    return sales.reduce((sum, sale) => {
-      // Find the product to get its wholesale price
-      const product = products.find((p: any) => p.id === sale.productId);
-      const wholesalePrice = product ? product.wholesalePrice : 0;
-      return sum + (wholesalePrice * sale.quantity);
-    }, 0);
-  };
-
-  // Helper function to calculate operational expenses
-  const calculateOperationalExpenses = (expenses: any[]): number => {
-    return expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  // Helper function to export business data to CSV
+  const exportBusinessDataToCSV = (business: Business) => {
+    const csvContent = [
+      ['Nom', business.name],
+      ['Type', business.type],
+      ['Pays', business.country || ''],
+      ['Ville', business.city || ''],
+      ['Devise', business.currency || ''],
+      ['Nombre de ventes', business.sales?.length || 0],
+      ['Nombre de dépenses', business.expenses?.length || 0],
+      ['Nombre de produits', business.products?.length || 0],
+      ['Nombre de clients', business.clients?.length || 0],
+      ['Nombre de fournisseurs', business.suppliers?.length || 0],
+    ].map(row => row.join(',')).join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `entreprise-${business.name}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const columns = [
@@ -254,9 +229,9 @@ export const Settings: React.FC<SettingsProps> = ({ businesses, onAddBusiness, o
       header: 'Statistiques',
       accessor: 'id' as keyof Business,
       render: (item: Business) => {
-        const totalSales = item.sales?.reduce((sum, sale) => sum + sale.total, 0) || 0;
+        const totalSales = calculateTotalSalesRevenue(item.sales || []);
         const totalCOGS = calculateCOGS(item.sales || [], item.products || []);
-        const totalOperationalExpenses = calculateOperationalExpenses(item.expenses || []);
+        const totalOperationalExpenses = calculateOperatingExpenses(item.expenses || []);
         const netProfit = totalSales - totalCOGS - totalOperationalExpenses;
 
         return (
@@ -282,31 +257,39 @@ export const Settings: React.FC<SettingsProps> = ({ businesses, onAddBusiness, o
       accessor: 'id' as keyof Business,
       render: (item: Business) => (
         <div className="flex flex-wrap gap-2">
-          <Button
+          <Button 
             variant="secondary"
             onClick={(e) => {
               e.stopPropagation();
-              handleOpenModal(item);
+              handleViewDetails(item);
+            }}
+            className="p-2"
+            aria-label="Voir les détails"
+          >
+            <Eye size={16} />
+          </Button>
+          <Button 
+            variant="secondary"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit(item);
             }}
             className="p-2"
             aria-label="Modifier"
           >
-            <Edit className="h-4 w-4" />
+            <Edit size={16} />
           </Button>
-          <Button
-            variant="secondary"
+          <Button 
             onClick={(e) => {
               e.stopPropagation();
-              handleOpenModal(item, true);
+              handleDeleteBusiness(item.id);
             }}
-            className="p-2"
-            aria-label="Dupliquer"
+            className="p-2 bg-red-500 hover:bg-red-600 text-white"
+            aria-label="Supprimer"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
+            <Trash2 size={16} />
           </Button>
-          <Button
+          <Button 
             variant="secondary"
             onClick={(e) => {
               e.stopPropagation();
@@ -315,36 +298,10 @@ export const Settings: React.FC<SettingsProps> = ({ businesses, onAddBusiness, o
             className="p-2"
             aria-label="Exporter"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-          </Button>
-          <Button
-            variant="primary"
-            onClick={(e) => {
-              e.stopPropagation();
-              // Afficher les détails de l'entreprise
-              setSelectedBusiness(item);
-            }}
-            className="p-2"
-            aria-label="Voir"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="danger"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(item.id);
-            }}
-            disabled={displayedBusinesses.length <= 1}
-            className="p-2"
-            aria-label="Supprimer"
-          >
-            <Trash2 className="h-4 w-4" />
+            <ArrowRightLeft size={16} />
           </Button>
         </div>
-      ),
+      )
     }
   ];
 
@@ -375,6 +332,14 @@ export const Settings: React.FC<SettingsProps> = ({ businesses, onAddBusiness, o
       console.error('Erreur lors du transfert de données:', error);
       throw error;
     }
+  };
+
+  const handleViewDetails = (business: Business) => {
+    setSelectedBusiness(business);
+  };
+
+  const handleEdit = (business: Business) => {
+    handleOpenModal(business);
   };
 
   return (
@@ -573,21 +538,51 @@ export const Settings: React.FC<SettingsProps> = ({ businesses, onAddBusiness, o
         <Modal
           isOpen={!!selectedBusiness}
           onClose={() => setSelectedBusiness(null)}
-          title={`Détails de l'entreprise: ${selectedBusiness?.name}`}
+          title="Détails de l'entreprise"
+          size="xl"
         >
           <BusinessDetails 
             business={selectedBusiness} 
             onEdit={() => {
               setSelectedBusiness(null);
-              handleOpenModal(selectedBusiness);
+              handleEdit(selectedBusiness);
             }}
-            onDelete={() => handleDelete(selectedBusiness.id)}
+            onDelete={() => handleDeleteBusiness(selectedBusiness.id)}
             businessesCount={displayedBusinesses.length}
             assignedEmployees={allUsers.filter(u => u.managedBusinessIds?.includes(selectedBusiness.id))}
             onRemoveEmployee={() => {}}
             auditLogs={[]} // À implémenter si nécessaire
             onUpdateSettings={() => {}} // À implémenter si nécessaire
           />
+          <div className="flex justify-end space-x-3 mt-6">
+            <Button 
+              variant="secondary"
+              onClick={() => {
+                handleEdit(selectedBusiness);
+                setSelectedBusiness(null);
+              }}
+            >
+              Modifier
+            </Button>
+            <Button 
+              variant="secondary"
+              onClick={() => {
+                exportBusinessDataToCSV(selectedBusiness);
+                setSelectedBusiness(null);
+              }}
+            >
+              Exporter
+            </Button>
+            <Button 
+              variant="danger"
+              onClick={() => {
+                handleDeleteBusiness(selectedBusiness.id);
+                setSelectedBusiness(null);
+              }}
+            >
+              Supprimer
+            </Button>
+          </div>
         </Modal>
       )}
 

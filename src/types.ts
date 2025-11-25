@@ -80,6 +80,7 @@ export interface Expense {
 export interface Product {
   id: string;
   name: string;
+  description?: string;
   category: string;
   sku?: string | null;
   barcode?: string | null;

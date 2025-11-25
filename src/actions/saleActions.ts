@@ -26,6 +26,22 @@ export async function createSale(businessId: string, saleData: Omit<Sale, 'id' |
     // Si clientId est une chaîne vide, le définir comme null
     const clientId = saleData.clientId === '' ? null : saleData.clientId;
     
+    // Récupérer le produit pour calculer le profit de manière fiable
+    let profit = saleData.profit || 0;
+    
+    if (saleData.productId) {
+      const product = await prisma.product.findUnique({
+        where: { id: saleData.productId }
+      });
+      
+      if (product) {
+        // Recalculer le profit en utilisant le prix d'achat réel du produit
+        const costPrice = product.costPrice > 0 ? product.costPrice : product.wholesalePrice;
+        const totalCost = costPrice * saleData.quantity;
+        profit = saleData.total - totalCost;
+      }
+    }
+    
     const sale = await prisma.sale.create({
       data: {
         id: `sale-${Date.now()}`,
@@ -39,7 +55,7 @@ export async function createSale(businessId: string, saleData: Omit<Sale, 'id' |
         discount: saleData.discount || 0,
         tax: saleData.tax || 0,
         total: saleData.total,
-        profit: saleData.profit || 0,
+        profit: profit,
         saleType: saleData.saleType,
         paymentStatus: saleData.paymentStatus,
         paymentMethod: saleData.paymentMethod,
@@ -47,6 +63,25 @@ export async function createSale(businessId: string, saleData: Omit<Sale, 'id' |
         userId: saleData.userId,
       },
     });
+    
+    // Mettre à jour le solde du client si un client est associé à la vente
+    if (clientId) {
+      // Récupérer le client
+      const client = await prisma.client.findUnique({
+        where: { id: clientId }
+      });
+      
+      if (client) {
+        // Mettre à jour le solde du client (ajouter le montant de la vente)
+        await prisma.client.update({
+          where: { id: clientId },
+          data: {
+            balance: client.balance + saleData.total,
+            lastPurchaseDate: new Date()
+          }
+        });
+      }
+    }
     
     return { success: true, data: sale };
   } catch (error) {

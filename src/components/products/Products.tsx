@@ -26,6 +26,7 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
     const [restockingProduct, setRestockingProduct] = useState<Product | null>(null);
     const [formData, setFormData] = useState<Omit<Product, 'id' | 'businessId' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'sku' | 'barcode' | 'images'>>({ 
         name: '', 
+        description: '',
         category: '', 
         stock: 0,
         minStock: 10, // Valeur par défaut pour le stock minimum
@@ -63,6 +64,10 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
     const deleteProductMutation = useDeleteProduct();
     const restockProductMutation = useRestockProduct();
     
+    // État pour les images
+    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+    const [selectedImages, setSelectedImages] = useState<File[]>([]);
+    
     // Déplacer les hooks useMemo après tous les hooks de données
     // Filtrer les produits en fonction du terme de recherche
     const filteredProducts = useMemo(() => {
@@ -71,6 +76,7 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
         const term = searchTerm.toLowerCase().trim();
         return products.filter(product => 
             product?.name?.toLowerCase().includes(term) ||
+            (product as any)?.description?.toLowerCase().includes(term) ||
             product?.category?.toLowerCase().includes(term) ||
             product?.id?.toLowerCase().includes(term)
         );
@@ -106,6 +112,18 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
         );
     }
     
+    // Gestion des images
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const files = Array.from(e.target.files);
+            setSelectedImages(files);
+            
+            // Créer des aperçus pour l'affichage
+            const previews = files.map(file => URL.createObjectURL(file));
+            setImagePreviews(previews);
+        }
+    };
+    
     // Fonction pour changer de page
     const goToPage = (page: number) => {
         setCurrentPage(page);
@@ -130,6 +148,7 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
             setEditingProduct(product);
             setFormData({
                 name: product.name,
+                description: product.description || '',
                 category: product.category,
                 stock: product.stock,
                 minStock: product.minStock || 0,
@@ -139,10 +158,18 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
                 purchasePrice: product.purchasePrice || 0,
                 supplierId: product.supplierId ?? undefined,
             });
+            
+            // Charger les images existantes si elles existent
+            if (product.images && Array.isArray(product.images)) {
+                setImagePreviews(product.images);
+            } else {
+                setImagePreviews([]);
+            }
         } else {
             setEditingProduct(null);
             setFormData({ 
                 name: '', 
+                description: '',
                 category: '', 
                 stock: 0,
                 minStock: 0,
@@ -152,6 +179,8 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
                 purchasePrice: 0,
                 supplierId: undefined,
             });
+            setImagePreviews([]);
+            setSelectedImages([]);
         }
         setIsModalOpen(true);
     };
@@ -178,6 +207,8 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setEditingProduct(null);
+        setImagePreviews([]);
+        setSelectedImages([]);
     };
 
     const handleCloseRestockModal = () => {
@@ -190,7 +221,7 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
         setDeletingProduct(null);
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
@@ -252,7 +283,7 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
         e.preventDefault();
         
         // Ajouter les champs requis manquants
-        const productData: any = {
+        let productData: any = {
             ...formData,
             businessId: business.id,
             createdAt: new Date().toISOString(),
@@ -260,8 +291,14 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
             // Champs optionnels avec valeurs par défaut
             sku: undefined,
             barcode: undefined,
-            images: undefined
+            images: imagePreviews.length > 0 ? imagePreviews : undefined
         };
+        
+        // Pour les non-administrateurs, exclure le prix d'achat
+        if (currentUser?.role !== 'ADMIN') {
+            const { costPrice, ...filteredData } = productData;
+            productData = filteredData;
+        }
         
         if (editingProduct) {
             // Update existing product
@@ -315,6 +352,11 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
                     <div>
                         <div className="font-medium text-gray-900 dark:text-white">{item.name}</div>
                         <div className="text-xs text-orange-400 dark:text-gray-400">{item.category}</div>
+                        {item.description && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                                {item.description}
+                            </div>
+                        )}
                     </div>
                 </div>
             )
@@ -338,15 +380,18 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
                 </div>
             )
         },
-        { 
-            header: 'Prix d\'Achat', 
-            accessor: 'costPrice',
-            render: (item: Product) => (
-                <div className="text-gray-900 dark:text-white">
-                    {item.costPrice.toLocaleString('fr-FR')} <span className="text-gray-500">FCFA</span>
-                </div>
-            )
-        },
+        // Afficher le prix d'achat et la marge uniquement pour les administrateurs
+        ...(currentUser?.role === 'ADMIN' ? [
+            { 
+                header: 'Prix d\'Achat', 
+                accessor: 'costPrice',
+                render: (item: Product) => (
+                    <div className="text-gray-900 dark:text-white">
+                        {item.costPrice.toLocaleString('fr-FR')} <span className="text-gray-500">FCFA</span>
+                    </div>
+                )
+            }
+        ] : []),
         { 
             header: 'Prix Détail', 
             accessor: 'retailPrice',
@@ -365,18 +410,21 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
                 </div>
             )
         },
-        { 
-            header: 'Marge', 
-            accessor: 'costPrice',
-            render: (item: Product) => {
-                const margin = calculateProfitMargin(item.costPrice || 0, item.retailPrice);
-                return (
-                    <div className={`font-medium ${getMarginColor(margin)}`}>
-                        {margin.toFixed(1)}%
-                    </div>
-                );
+        // Afficher la marge uniquement pour les administrateurs
+        ...(currentUser?.role === 'ADMIN' ? [
+            { 
+                header: 'Marge', 
+                accessor: 'costPrice',
+                render: (item: Product) => {
+                    const margin = calculateProfitMargin(item.costPrice || 0, item.retailPrice);
+                    return (
+                        <div className={`font-medium ${getMarginColor(margin)}`}>
+                            {margin.toFixed(1)}%
+                        </div>
+                    );
+                }
             }
-        },
+        ] : []),
         {
             header: 'Actions',
             accessor: 'id',
@@ -452,7 +500,7 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
             </div>
             
             {/* Statistiques rapides */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className={`grid gap-4 ${currentUser?.role === 'ADMIN' ? 'grid-cols-1 md:grid-cols-4' : 'grid-cols-1 md:grid-cols-3'}`}>
                 <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-5 text-white">
                     <h3 className="text-sm font-medium opacity-80">Total Produits</h3>
                     <p className="text-2xl font-bold mt-1">{products.length}</p>
@@ -472,12 +520,15 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
                     </p>
                 </div>
                 
-                <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-5 text-white">
-                    <h3 className="text-sm font-medium opacity-80">Valeur Stock</h3>
-                    <p className="text-2xl font-bold mt-1">
-                        {products.reduce((sum, product) => sum + (product.stock * product.wholesalePrice), 0).toLocaleString('fr-FR')} FCFA
-                    </p>
-                </div>
+                {/* Afficher la valeur du stock uniquement pour les administrateurs */}
+                {currentUser?.role === 'ADMIN' && (
+                    <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-5 text-white">
+                        <h3 className="text-sm font-medium opacity-80">Valeur Stock</h3>
+                        <p className="text-2xl font-bold mt-1">
+                            {products.reduce((sum, product) => sum + (product.stock * product.wholesalePrice), 0).toLocaleString('fr-FR')} FCFA
+                        </p>
+                    </div>
+                )}
             </div>
             
             {/* Tableau des produits avec design amélioré */}
@@ -583,6 +634,19 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
                         </div>
                     </div>
                     
+                    <div>
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                        <textarea
+                            id="description"
+                            name="description"
+                            value={formData.description}
+                            onChange={handleChange}
+                            rows={3}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            placeholder="Description du produit..."
+                        />
+                    </div>
+                    
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div>
                             <label htmlFor="stock" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock actuel</label>
@@ -633,19 +697,22 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
                         <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-3">Prix du produit</h3>
                         
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label htmlFor="costPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prix d'achat (FCFA)</label>
-                                <input
-                                    type="number"
-                                    id="costPrice"
-                                    name="costPrice"
-                                    value={formData.costPrice}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    min="0"
-                                    placeholder="0"
-                                />
-                            </div>
+                            {/* Afficher le champ prix d'achat uniquement pour les administrateurs */}
+                            {currentUser?.role === 'ADMIN' && (
+                                <div>
+                                    <label htmlFor="costPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prix d'achat (FCFA)</label>
+                                    <input
+                                        type="number"
+                                        id="costPrice"
+                                        name="costPrice"
+                                        value={formData.costPrice}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        min="0"
+                                        placeholder="0"
+                                    />
+                                </div>
+                            )}
                             
                             <div>
                                 <label htmlFor="retailPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prix détail (FCFA)</label>
@@ -677,6 +744,57 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
                                 />
                             </div>
                         </div>
+                    </div>
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Images du produit</label>
+                        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
+                            <div className="space-y-1 text-center">
+                                <div className="flex text-sm text-gray-600 dark:text-gray-400">
+                                    <label className="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
+                                        <span>Sélectionner des fichiers</span>
+                                        <input 
+                                            type="file" 
+                                            multiple 
+                                            accept="image/*" 
+                                            onChange={handleImageChange}
+                                            className="sr-only" 
+                                        />
+                                    </label>
+                                    <p className="pl-1">ou glisser-déposer</p>
+                                </div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    PNG, JPG, GIF jusqu'à 10MB
+                                </p>
+                            </div>
+                        </div>
+                        
+                        {/* Aperçu des images */}
+                        {imagePreviews.length > 0 && (
+                            <div className="mt-4 grid grid-cols-3 gap-4">
+                                {imagePreviews.map((preview, index) => (
+                                    <div key={index} className="relative">
+                                        <img 
+                                            src={preview} 
+                                            alt={`Preview ${index}`} 
+                                            className="h-24 w-full object-cover rounded-md"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newPreviews = imagePreviews.filter((_, i) => i !== index);
+                                                setImagePreviews(newPreviews);
+                                            }}
+                                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                        >
+                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                     
                     <div className="flex justify-end space-x-3 pt-2">

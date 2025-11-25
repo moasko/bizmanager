@@ -1,7 +1,16 @@
-import React, { useMemo, useState, useCallback } from 'react';
-import type { Business, Sale, Expense } from '../../types';
+import React, { useState, useMemo, useCallback } from 'react';
+import type { Business, Sale, Expense, Product } from '@/types';
+import { Button } from '@/components/shared/Button';
+import { DateFilter } from '@/components/shared/DateFilter';
+// Importer les fonctions de calcul depuis le nouveau fichier
+import { 
+    calculateTotalSalesRevenue,
+    calculateCOGS,
+    calculateOperatingExpenses,
+    formatCurrency,
+    formatPercentage
+} from '@/utils/calculations';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, Sector } from 'recharts';
-import { DateFilter } from '../shared';
 
 interface ReportsProps {
     business: Business;
@@ -383,14 +392,7 @@ export const Reports: React.FC<ReportsProps> = ({ business, hideFilters = false 
 
     // Calcul du COGS (Coût des marchandises vendues)
     const totalCOGS = useMemo(() => {
-        return filteredData.sales.reduce((sum, sale) => {
-            if (sale.productId && sale.productId !== null) {
-                const product = businessData.products.find(p => p.id === sale.productId);
-                const wholesalePrice = product ? product.wholesalePrice : 0;
-                return sum + (wholesalePrice * (sale.quantity || 0));
-            }
-            return sum;
-        }, 0);
+        return calculateCOGS(filteredData.sales, businessData.products);
     }, [filteredData.sales, businessData.products]);
 
     const totalProfit = useMemo(() => {

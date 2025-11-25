@@ -3,36 +3,23 @@
 import React from 'react';
 import type { Business } from '@/types';
 import { StatCard } from '../dashboard/StatCard';
+// Importer les fonctions de calcul depuis le nouveau fichier
+import { 
+    calculateTotalSalesRevenue,
+    calculateCOGS,
+    calculateOperatingExpenses,
+    formatCurrency
+} from '@/utils/calculations';
 
 interface BusinessDashboardProps {
   business: Business;
 }
 
-// Helper function to calculate cost of goods sold (COGS)
-const calculateCOGS = (sales: any[], products: any[]): number => {
-    return sales.reduce((sum, sale) => {
-        // Find the product to get its wholesale price
-        const product = products.find((p: any) => p.id === sale.productId);
-        const wholesalePrice = product ? product.wholesalePrice : 0;
-        return sum + (wholesalePrice * sale.quantity);
-    }, 0);
-};
-
-// Helper function to calculate operational expenses
-const calculateOperationalExpenses = (expenses: any[]): number => {
-    return expenses.reduce((sum, expense) => sum + expense.amount, 0);
-};
-
-// Helper function to format currency
-const formatCurrency = (amount: number): string => {
-    return `${amount?.toLocaleString('fr-FR')} FCFA`;
-};
-
 export const BusinessDashboard: React.FC<BusinessDashboardProps> = ({ business }) => {
   // Calculate business statistics
-  const totalSales = (business.sales || []).reduce((sum, sale) => sum + sale.total, 0);
+  const totalSales = calculateTotalSalesRevenue(business.sales || []);
   const totalCOGS = calculateCOGS(business.sales || [], business.products || []);
-  const totalOperationalExpenses = calculateOperationalExpenses(business.expenses || []);
+  const totalOperationalExpenses = calculateOperatingExpenses(business.expenses || []);
   const netProfit = totalSales - totalCOGS - totalOperationalExpenses;
   const totalProducts = (business.products || []).length;
   const lowStockProducts = (business.products || []).filter(p => p.stock < 10).length;

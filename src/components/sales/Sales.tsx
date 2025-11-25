@@ -231,8 +231,12 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
         for (const item of formData.lineItems) {
             const total = item.quantity * item.unitPrice;
             
-            // Calculer le profit (exemple simple)
-            const profit = total - (item.unitPrice * 0.8 * item.quantity); // 20% de marge
+            // Trouver le produit pour obtenir son prix d'achat (costPrice ou wholesalePrice)
+            const product = products.find((p: any) => p.id === item.productId);
+            const costPrice = product ? (product.costPrice > 0 ? product.costPrice : product.wholesalePrice) : 0;
+            
+            // Calculer le profit correctement : Profit = Total - (Coût unitaire * Quantité)
+            const profit = total - (costPrice * item.quantity);
             
             // Préparer les données pour la vente (sans les champs gérés par le serveur)
             const saleData = { 

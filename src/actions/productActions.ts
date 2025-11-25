@@ -24,6 +24,7 @@ export async function createProduct(businessId: string, productData: Omit<Produc
     const productDataToCreate: any = {
       id: `prod-${Date.now()}`,
       name: productData.name,
+      description: productData.description,
       category: productData.category,
       stock: productData.stock,
       minStock: productData.minStock || 0,
@@ -70,6 +71,7 @@ export async function updateProduct(id: string, productData: Partial<Omit<Produc
     
     // Add fields that are provided
     if (productData.name !== undefined) updateData.name = productData.name;
+    if (productData.description !== undefined) updateData.description = productData.description;
     if (productData.category !== undefined) updateData.category = productData.category;
     if (productData.stock !== undefined) updateData.stock = productData.stock;
     if (productData.minStock !== undefined) updateData.minStock = productData.minStock;
