@@ -388,58 +388,58 @@ export const ClientsRefactored: React.FC<ClientsProps> = ({ business, onAddClien
         </div>
 
         {/* Liste des clients en grille */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
           <AnimatePresence>
             {filteredAndSortedClients.map((client) => (
               <motion.div
                 key={client.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 hover:border-orange-300"
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-gray-100 hover:border-orange-200"
                 onClick={() => handleOpenClientDetail(convertClient(client))}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center">
-                    <div className="bg-orange-100 rounded-full w-12 h-12 flex items-center justify-center">
-                      <User className="text-orange-600" size={24} />
+                    <div className="bg-orange-100 rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0">
+                      <User className="text-orange-600" size={20} />
                     </div>
-                    <div className="ml-4">
-                      <h3 className="font-bold text-lg text-gray-900">{client.name}</h3>
-                      <p className="text-gray-600 text-sm">{client.contact}</p>
+                    <div className="ml-3 min-w-0">
+                      <h3 className="font-semibold text-gray-900 truncate text-sm">{client.name}</h3>
+                      <p className="text-gray-500 text-xs truncate">{client.contact}</p>
                     </div>
                   </div>
-                  <div className="flex items-center bg-gray-100 px-2 py-1 rounded-full">
-                    <Star className="text-amber-500 mr-1" size={16} />
-                    <span className="text-sm text-gray-700">{client.loyaltyPoints || 0} pts</span>
+                  <div className="flex items-center bg-gray-100 px-1.5 py-0.5 rounded-full">
+                    <Star className="text-amber-500 mr-0.5" size={12} />
+                    <span className="text-xs text-gray-700">{client.loyaltyPoints || 0}</span>
                   </div>
                 </div>
                 
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center text-gray-600">
-                    <Building className="mr-2" size={16} />
-                    <span className="text-sm">{client.company || 'N/A'}</span>
+                <div className="mt-3 space-y-1.5">
+                  <div className="flex items-center text-gray-500 text-xs">
+                    <Building className="mr-1.5" size={12} />
+                    <span className="truncate">{client.company || 'N/A'}</span>
                   </div>
-                  <div className="flex items-center text-gray-600">
-                    <Phone className="mr-2" size={16} />
-                    <span className="text-sm">{client.telephone || 'N/A'}</span>
+                  <div className="flex items-center text-gray-500 text-xs">
+                    <Phone className="mr-1.5" size={12} />
+                    <span className="truncate">{client.telephone || 'N/A'}</span>
                   </div>
-                  <div className="flex items-center justify-between mt-4">
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
                     <div>
-                      <p className="text-gray-600 text-sm">Solde</p>
-                      <p className={`font-bold ${getBalanceColor(client.balance)}`}>
+                      <p className="text-gray-500 text-xs">Solde</p>
+                      <p className={`font-semibold text-sm ${getBalanceColor(client.balance)}`}>
                         {formatBalance(client.balance)}
                       </p>
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-1">
                       <Button 
                         variant="secondary"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleOpenEditModal(convertClient(client));
                         }}
-                        className="bg-blue-100 hover:bg-blue-200 text-blue-800 text-sm py-1 px-3 rounded-lg transition-colors duration-200"
+                        className="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs py-1 px-2 rounded-md transition-colors duration-150"
                       >
                         Éditer
                       </Button>
@@ -449,19 +449,9 @@ export const ClientsRefactored: React.FC<ClientsProps> = ({ business, onAddClien
                           e.stopPropagation();
                           handleDeleteClient(client.id);
                         }}
-                        className="bg-red-100 hover:bg-red-200 text-red-800 text-sm py-1 px-3 rounded-lg transition-colors duration-200"
+                        className="bg-red-50 hover:bg-red-100 text-red-700 text-xs py-1 px-2 rounded-md transition-colors duration-150"
                       >
-                        Supprimer
-                      </Button>
-                      <Button 
-                        variant="secondary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenPaymentModal(client.id);
-                        }}
-                        className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm py-1 px-3 rounded-lg transition-colors duration-200"
-                      >
-                        Paiement
+                        Suppr.
                       </Button>
                     </div>
                   </div>
