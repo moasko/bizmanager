@@ -186,7 +186,7 @@ export const ClientsRefactored: React.FC<ClientsProps> = ({ business, onAddClien
 
     // Fonction pour calculer le solde total des clients
     const calculateTotalBalance = () => {
-        return clients.reduce((total, client: any) => total + (client.balance || 0), 0);
+        return clientsWithUpdatedBalances.reduce((total, client: any) => total + (client.balance || 0), 0);
     };
 
     // Fonction pour obtenir la couleur du solde
@@ -364,9 +364,19 @@ export const ClientsRefactored: React.FC<ClientsProps> = ({ business, onAddClien
                 </svg>
               </div>
             </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="bg-white rounded-xl p-4 shadow-md">
+                <p className="text-gray-600 text-sm">Total Clients</p>
+                <p className="text-2xl font-bold text-orange-600">{clients.length}</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-md">
+                <p className="text-gray-600 text-sm">Total des Soldes</p>
+                <p className="text-2xl font-bold text-orange-600">{calculateTotalBalance().toLocaleString('fr-FR')} FCFA</p>
+              </div>
+            </div>
             <Button 
               onClick={handleOpenModal}
-              className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md"
+              className="bg-orange-600 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md"
             >
               <svg 
                 className="w-5 h-5 mr-2" 
