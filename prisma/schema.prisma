@@ -71,6 +71,7 @@ model Business {
   clients     Client[]
   suppliers   Supplier[]
   users       User[]      @relation("ManagedBusinesses")
+  extensionData ExtensionData[] // Relation inverse pour les données d'extensions
 
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
@@ -264,6 +265,7 @@ model User {
   permissions       Json?         // granular permission system
 
   managedBusinesses Business[]    @relation("ManagedBusinesses")
+  extensionData     ExtensionData[] // Relation inverse pour les données d'extensions
 
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -289,3 +291,28 @@ model AuditLog {
 
   @@index([userId])
 }
+
+/* ====================================
+   EXTENSION DATA
+======================================*/
+
+model ExtensionData {
+  id           String    @id @default(uuid())
+  extensionId  String
+  businessId   String
+  userId       String?   // Pour assigner à un utilisateur spécifique
+  key          String    // Nom de la clé de données (ex: 'wifiSales')
+  data         Json      // Données JSON de l'extension
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  business     Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([extensionId])
+  @@index([businessId])
+  @@index([userId])
+  @@unique([extensionId, businessId, key])
+}
+
+
