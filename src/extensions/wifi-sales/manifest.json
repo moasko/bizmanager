@@ -1,0 +1,10 @@
+{
+  "id": "wifi-sales",
+  "name": "Ventes Wi-Fi",
+  "description": "Suivi et analyse des ventes de tickets Wi-Fi",
+  "version": "1.0.0",
+  "author": "Sunlab",
+  "icon": "Wifi",
+  "enabled": true,
+  "installed": true
+}
