@@ -28,7 +28,8 @@ export const PrintableFinancialReport: React.FC<PrintableFinancialReportProps> =
   // Calculer le COGS (Coût des marchandises vendues)
   const totalCOGS = sales.reduce((sum, sale) => {
     const product = products.find(p => p.id === sale.productId);
-    const cost = (product?.wholesalePrice || 0) * (sale.quantity || 0);
+    const costPrice = product ? (product.costPrice > 0 ? product.costPrice : product.wholesalePrice) : 0;
+    const cost = costPrice * (sale.quantity || 0);
     return sum + cost;
   }, 0);
   

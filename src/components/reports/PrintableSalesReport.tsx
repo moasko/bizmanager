@@ -58,7 +58,8 @@ export const PrintableSalesReport: React.FC<PrintableSalesReportProps> = ({
     const productData = salesByProduct[productId];
     const quantity = sale.quantity || 0;
     const revenue = sale.total || 0;
-    const cost = (productData.product?.wholesalePrice || 0) * quantity;
+    const costPrice = productData.product ? (productData.product.costPrice > 0 ? productData.product.costPrice : productData.product.wholesalePrice) : 0;
+    const cost = costPrice * quantity;
     const profit = revenue - cost;
     
     productData.quantity += quantity;

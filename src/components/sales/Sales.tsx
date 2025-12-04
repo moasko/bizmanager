@@ -309,7 +309,8 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
       const total = item.quantity * item.unitPrice;
       const product = products.find((p: any) => p.id === item.productId);
       const costPrice = product ? (product.costPrice > 0 ? product.costPrice : product.wholesalePrice) : 0;
-      const profit = total - (costPrice * item.quantity);
+      const cogs = costPrice * item.quantity;
+      const profit = total - cogs;
       const client = clients.find((c: any) => c.id === formData.clientId);
       const clientName = client ? client.name : '';
       
@@ -424,7 +425,14 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
   const totalSales = sortedAndFilteredSales.reduce((sum, sale) => sum + sale.total, 0);
   const averageSale = sortedAndFilteredSales.length > 0 ? Math.round(totalSales / sortedAndFilteredSales.length) : 0;
   const uniqueClients = [...new Set(sortedAndFilteredSales.map(sale => sale.clientId))].filter(id => id).length;
-  const totalProfit = sortedAndFilteredSales.reduce((sum, sale) => sum + (sale.profit || 0), 0);
+  // Calcul du profit total selon la formule : Cumul des ventes - Cumul des prix d'achat des produits vendus
+  const totalRevenue = sortedAndFilteredSales.reduce((sum, sale) => sum + (sale.total || 0), 0);
+  const totalCOGS = sortedAndFilteredSales.reduce((sum, sale) => {
+    const product = products.find(p => p.id === sale.productId);
+    const costPrice = product ? (product.costPrice > 0 ? product.costPrice : product.wholesalePrice) : 0;
+    return sum + (costPrice * (sale.quantity || 0));
+  }, 0);
+  const totalProfit = totalRevenue - totalCOGS;
 
   const columns = useMemo(() => {
     const baseColumns = [

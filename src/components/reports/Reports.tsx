@@ -354,7 +354,7 @@ export const Reports: React.FC<ReportsProps> = ({ business, hideFilters = false 
                 const productId = sale.productId;
                 if (!productCosts[productId]) {
                     const product = businessData.products.find(p => p.id === productId);
-                    productCosts[productId] = product ? product.wholesalePrice : 0;
+                    productCosts[productId] = product ? (product.costPrice > 0 ? product.costPrice : product.wholesalePrice) : 0;
                 }
                 
                 const cost = (productCosts[productId] || 0) * (sale.quantity || 0);

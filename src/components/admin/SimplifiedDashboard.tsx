@@ -170,7 +170,8 @@ export const SimplifiedDashboard: React.FC<SimplifiedDashboardProps> = ({ allBus
                 // Find the product to calculate COGS for this sale
                 const product = business.products.find((p: any) => p.id === sale.productId);
                 if (product && sale.quantity > 0) {
-                    const cogs = (product.wholesalePrice || 0) * sale.quantity;
+                    const costPrice = product.costPrice > 0 ? product.costPrice : product.wholesalePrice || 0;
+                    const cogs = costPrice * sale.quantity;
                     if (data[key]) {
                         // Subtract COGS from profit calculation
                         data[key].benefice -= cogs;
