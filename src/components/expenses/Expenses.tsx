@@ -13,10 +13,13 @@ interface ExpensesProps {
     onAddExpense: (newExpense: Expense) => void;
 }
 
+// Define a type for the form data that omits certain fields from Expense
+type ExpenseFormData = Omit<Expense, 'id' | 'businessId' | 'reference' | 'paymentMethod' | 'approvedById' | 'receiptUrl' | 'createdAt' | 'updatedAt' | 'deletedAt'>;
+
 export const Expenses: React.FC<ExpensesProps> = ({ business, onAddExpense }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formData, setFormData] = useState<Omit<Expense, 'id' | 'businessId' | 'reference' | 'paymentMethod' | 'approvedById' | 'receiptUrl' | 'createdAt' | 'updatedAt' | 'deletedAt'>>({ 
-        date: new Date().toISOString().split('T')[0], 
+    const [formData, setFormData] = useState<ExpenseFormData>({ 
+        date: new Date(), // Use Date object internally
         category: '', 
         description: '', 
         amount: 0 
@@ -45,17 +48,9 @@ export const Expenses: React.FC<ExpensesProps> = ({ business, onAddExpense }) =>
     const { data: expenses = [], isLoading } = useExpenses(businessId);
     const createExpenseMutation = useCreateExpense();
 
-    // Convert database expense objects to Expense type
-    const formattedExpenses = useMemo(() => {
-        return expenses.map((expense: any) => ({
-            ...expense,
-            date: typeof expense.date === 'string' ? expense.date : expense.date.toISOString().split('T')[0]
-        }));
-    }, [expenses]);
-
     const handleOpenModal = () => {
         setFormData({ 
-            date: new Date().toISOString().split('T')[0], 
+            date: new Date(), // Use Date object internally
             category: '', 
             description: '', 
             amount: 0 
@@ -69,9 +64,10 @@ export const Expenses: React.FC<ExpensesProps> = ({ business, onAddExpense }) =>
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
+        setFormData((prev: ExpenseFormData) => ({
             ...prev,
-            [name]: name === 'amount' ? Number(value) : value
+            [name]: name === 'amount' ? Number(value) : 
+                   name === 'date' ? new Date(value) : value // Convert date string to Date object
         }));
     };
 
@@ -86,8 +82,8 @@ export const Expenses: React.FC<ExpensesProps> = ({ business, onAddExpense }) =>
             paymentMethod: 'CASH', // Valeur par défaut
             approvedById: undefined, // Optionnel
             receiptUrl: undefined, // Optionnel
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            createdAt: new Date(), // Use Date object instead of string
+            updatedAt: new Date()  // Use Date object instead of string
         };
         
         await createExpenseMutation.mutateAsync({ 
@@ -108,6 +104,17 @@ export const Expenses: React.FC<ExpensesProps> = ({ business, onAddExpense }) =>
             render: (item: Expense) => `${item.amount.toLocaleString('fr-FR')} FCFA`
         }
     ], []);
+
+    // Convert database expense objects to Expense type
+    const formattedExpenses = useMemo(() => {
+        return expenses.map((expense: any) => ({
+            ...expense,
+            // Format date for display purposes
+            date: typeof expense.date === 'string' ? 
+                new Date(expense.date).toLocaleDateString('fr-FR') : 
+                expense.date.toLocaleDateString('fr-FR')
+        }));
+    }, [expenses]);
 
     // Calculer le total des dépenses par catégorie
     const expensesByCategory = useMemo(() => {
@@ -174,7 +181,7 @@ export const Expenses: React.FC<ExpensesProps> = ({ business, onAddExpense }) =>
                             type="date"
                             id="date"
                             name="date"
-                            value={formData.date}
+                            value={formData.date instanceof Date ? formData.date.toISOString().split('T')[0] : formData.date}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                             required

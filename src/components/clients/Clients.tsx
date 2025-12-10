@@ -165,8 +165,8 @@ export const Clients: React.FC<ClientsProps> = ({ business, onAddClient, onRecor
         const clientData: any = {
             ...formData,
             businessId: business.id,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            createdAt: new Date(), // Use Date object instead of string
+            updatedAt: new Date(), // Use Date object instead of string
             // Champs optionnels avec valeurs par défaut
             loyaltyPoints: 0,
             lastPurchaseDate: undefined,

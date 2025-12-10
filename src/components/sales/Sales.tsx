@@ -46,6 +46,15 @@ interface SaleLineItem {
   unitPrice: number;
 }
 
+// Define a type for the form data
+type SaleFormData = {
+  date: Date; // Use Date object instead of string
+  clientId: string;
+  clientName: string;
+  saleType: 'RETAIL' | 'WHOLESALE';
+  lineItems: SaleLineItem[];
+};
+
 export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -54,14 +63,8 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
   const [endDate, setEndDate] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
-  const [formData, setFormData] = useState<{
-    date: string;
-    clientId: string;
-    clientName: string;
-    saleType: 'RETAIL' | 'WHOLESALE';
-    lineItems: SaleLineItem[];
-  }>({ 
-    date: new Date().toISOString().split('T')[0], 
+  const [formData, setFormData] = useState<SaleFormData>({ 
+    date: new Date(), // Use Date object instead of string
     clientId: '', 
     clientName: '', 
     saleType: 'RETAIL',
@@ -91,6 +94,7 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
   const updateSaleMutation = useUpdateSale();
   const deleteSaleMutation = useDeleteSale();
 
+  // Convert database sale objects to Sale type
   const formattedSales: Sale[] = useMemo(() => {
     return sales.map((sale: any) => {
       let clientName = '';
@@ -101,7 +105,7 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
       
       return {
         ...sale,
-        date: typeof sale.date === 'string' ? sale.date : sale.date.toISOString().split('T')[0],
+        date: typeof sale.date === 'string' ? new Date(sale.date) : sale.date,
         saleType: sale.saleType as 'RETAIL' | 'WHOLESALE',
         clientName: sale.clientName || clientName
       };
@@ -122,7 +126,7 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
 
   const handleOpenModal = () => {
     setFormData({ 
-      date: new Date().toISOString().split('T')[0], 
+      date: new Date(), // Use Date object instead of string
       clientId: '', 
       clientName: '', 
       saleType: "RETAIL",
@@ -157,7 +161,7 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === 'date' ? new Date(value) : value // Convert date string to Date object
     }));
   };
 
@@ -299,33 +303,30 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
       if (!checkStockAvailability(item.productId, item.quantity)) {
         const product = products.find((p: any) => p.id === item.productId);
         if (product) {
-          alert(`Stock insuffisant pour le produit ${product.name}. Stock disponible : ${product.stock}`);
+          alert(`Stock insuffisant pour le produit "${product.name}". Stock disponible: ${product.stock}`);
           return;
         }
       }
     }
     
+    // Process each line item as a separate sale
     for (const item of formData.lineItems) {
-      const total = item.quantity * item.unitPrice;
       const product = products.find((p: any) => p.id === item.productId);
       const costPrice = product ? (product.costPrice > 0 ? product.costPrice : product.wholesalePrice) : 0;
-      const cogs = costPrice * item.quantity;
-      const profit = total - cogs;
-      const client = clients.find((c: any) => c.id === formData.clientId);
-      const clientName = client ? client.name : '';
       
-      const saleData = { 
+      const saleData: any = {
+        reference: `SL-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         date: formData.date,
         clientId: formData.clientId || null,
-        clientName: clientName,
+        clientName: formData.clientName || null,
         productId: item.productId,
         productName: item.productName,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
-        discount: 0,
-        tax: 0,
-        total,
-        profit,
+        discount: 0, // Valeur par défaut
+        tax: 0, // Valeur par défaut
+        total: item.quantity * item.unitPrice,
+        profit: (item.quantity * item.unitPrice) - (item.quantity * costPrice),
         saleType: formData.saleType,
         paymentStatus: 'PAID' as const,
         paymentMethod: 'CASH' as const,
@@ -392,7 +393,7 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
         (sale.clientName && sale.clientName.toLowerCase().includes(term)) ||
         (sale.productName && sale.productName.toLowerCase().includes(term)) ||
         sale.total.toString().includes(term) ||
-        sale.date.includes(term)
+        new Date(sale.date).toLocaleDateString('fr-FR').includes(term) // Convert date to string for search
       );
     }
     
@@ -925,14 +926,14 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">Date</label>
               <input
                 type="date"
                 id="date"
                 name="date"
-                value={formData.date}
+                value={formData.date.toISOString().split('T')[0]}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-gray-50"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 required
               />
             </div>
@@ -1137,29 +1138,20 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
                 </p>
               </div>
               
-              <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-                <div className="text-right bg-white p-4 rounded-xl shadow-sm">
-                  <p className="text-sm text-gray-600">Total de la vente</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {calculateSaleTotal().toLocaleString('fr-FR')} <span className="text-lg">FCFA</span>
-                  </p>
-                </div>
-                
-                <div className="flex gap-3">
-                  <button 
-                    type="button" 
-                    onClick={handleCloseModal}
-                    className="px-6 py-3 bg-white border border-gray-300 text-gray-700 font-medium rounded-xl shadow-sm hover:bg-gray-50 transition-all duration-300"
-                  >
-                    Annuler
-                  </button>
-                  <button 
-                    type="submit" 
-                    className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
-                  >
-                    Enregistrer la Vente
-                  </button>
-                </div>
+              <div className="flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={handleCloseModal}
+                  className="px-6 py-3 bg-white border border-gray-300 text-gray-700 font-medium rounded-xl shadow-sm hover:bg-gray-50 transition-all duration-300"
+                >
+                  Annuler
+                </button>
+                <button 
+                  type="submit" 
+                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  Enregistrer la Vente
+                </button>
               </div>
             </div>
           </div>
@@ -1195,7 +1187,7 @@ export const Sales: React.FC<SalesProps> = ({ business, onAddSale }) => {
                   type="date"
                   id="edit-date"
                   name="date"
-                  defaultValue={editingSale.date}
+                  defaultValue={editingSale.date.toISOString().split('T')[0]}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-gray-50"
                   required
                 />
