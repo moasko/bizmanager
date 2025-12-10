@@ -105,12 +105,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentUser }) => {
       roles: ['ADMIN']
     },
     { 
-      name: 'Finances', 
-      href: '/finance', 
-      icon: Wallet,
-      roles: ['ADMIN']
-    },
-    { 
       name: 'Dépenses', 
       href: '/expenses', 
       icon: CreditCard,
