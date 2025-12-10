@@ -31,13 +31,8 @@ export const useWifiSales = () => {
       
       const result = await getWifiTickets(activeBusiness.id);
       if (result.success && result.data) {
-        // Convertir les dates en string
-        return result.data.map(product => ({
-          ...product,
-          createdAt: product.createdAt.toISOString(),
-          updatedAt: product.updatedAt.toISOString(),
-          deletedAt: product.deletedAt ? product.deletedAt.toISOString() : null
-        })) as Product[];
+        // Return the data as-is since Product interface expects Date objects
+        return result.data as Product[];
       }
       return [];
     },
@@ -61,9 +56,9 @@ export const useWifiSales = () => {
           unitPrice: sale.unitPrice,
           quantitySold: sale.quantity,
           totalAmount: sale.total,
-          saleDate: sale.date.toISOString(),
-          weekNumber: getWeekNumber(new Date(sale.date)),
-          year: new Date(sale.date).getFullYear()
+          saleDate: sale.date instanceof Date ? sale.date : new Date(sale.date),
+          weekNumber: getWeekNumber(sale.date instanceof Date ? sale.date : new Date(sale.date)),
+          year: (sale.date instanceof Date ? sale.date : new Date(sale.date)).getFullYear()
         })) as unknown as WifiSale[];
       }
       return [];

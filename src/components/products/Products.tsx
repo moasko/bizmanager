@@ -275,8 +275,8 @@ export const Products: React.FC<ProductsProps> = ({ business, onAddProduct, onUp
         let completeProductData: any = {
             ...productData,
             businessId: business.id,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            createdAt: new Date(), // Use Date object instead of string
+            updatedAt: new Date(), // Use Date object instead of string
             // Champs optionnels avec valeurs par défaut
             sku: undefined,
             barcode: undefined,

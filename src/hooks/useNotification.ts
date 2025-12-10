@@ -12,7 +12,7 @@ let mockNotifications: Notification[] = [
     title: 'Stock faible',
     message: 'Le produit "iPhone 13" est presque en rupture de stock (2 unités restantes)',
     read: false,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(), // Use Date object instead of string
     relatedEntityId: 'prod1'
   },
   {
@@ -23,7 +23,7 @@ let mockNotifications: Notification[] = [
     title: 'Objectif de ventes atteint',
     message: 'Félicitations ! Vous avez atteint 80% de votre objectif mensuel de ventes',
     read: false,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(), // Use Date object instead of string
   },
   {
     id: '3',
@@ -33,7 +33,7 @@ let mockNotifications: Notification[] = [
     title: 'Dépense importante',
     message: 'Une nouvelle dépense de 500.000 FCFA a été enregistrée',
     read: true,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(), // Use Date object instead of string
     relatedEntityId: 'exp1'
   }
 ];
